@@ -33,24 +33,24 @@ export default function Streams() {
   ]
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="min-h-screen bg-gradient-to-br from-white to-primary/5 flex flex-col">
       <Header />
-      <div className="max-w-screen-xl mx-auto px-8 py-6">
-        <div className="flex items-center justify-between mb-6">
+      <div className="max-w-screen-xl mx-auto px-8 py-12">
+        <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-3">
             <Link href="/">
-              <Button variant="ghost" size="icon">
-                <ArrowLeft className="h-5 w-5" />
+              <Button variant="ghost" size="icon" className="hover:bg-primary/10 transition-all duration-300">
+                <ArrowLeft className="h-5 w-5 text-primary/70" />
               </Button>
             </Link>
             <div>
-              <h1 className="text-2xl font-bold text-foreground">Payroll Streams</h1>
-              <p className="text-sm text-muted-foreground">Real-time salary streaming</p>
+              <h1 className="text-2xl font-extralight text-gray-900">Payroll Streams</h1>
+              <p className="text-sm text-gray-500 font-light">Real-time salary streaming</p>
             </div>
           </div>
           <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-              <Button className="gap-2">
+              <Button className="gap-2 bg-gradient-to-br from-primary to-secondary text-white hover:shadow-md transition-all duration-300">
                 <Plus className="h-4 w-4" />
                 Create Invoice
               </Button>
@@ -88,64 +88,64 @@ export default function Streams() {
           </Dialog>
         </div>
 
-        <Card className="mb-6 backdrop-blur-xl bg-card border-border">
+        <Card className="mb-8 bg-white border-border/50 shadow-sm rounded-xl hover:shadow-md transition-all duration-300">
           <CardContent className="pt-6">
             <div className="flex items-center gap-3 mb-4">
-              <div className="w-12 h-12 rounded-full bg-black/10 flex items-center justify-center">
-                <Zap className="h-6 w-6 text-foreground animate-pulse" />
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/5 to-primary/10 flex items-center justify-center">
+                <Zap className="h-6 w-6 text-primary/70 animate-pulse" />
               </div>
               <div>
-                <div className="font-semibold text-lg text-foreground">Salary Stream Active</div>
-                <div className="text-sm text-muted-foreground">Streaming in real-time</div>
+                <div className="font-light text-lg text-gray-900">Salary Stream Active</div>
+                <div className="text-sm text-gray-500 font-light">Streaming in real-time</div>
               </div>
             </div>
             <Progress value={10.85} className="h-3 mb-2" />
             <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">$54.23 streamed</span>
-              <span className="font-medium text-foreground">$500.00 total</span>
+              <span className="text-gray-500 font-light">$54.23 streamed</span>
+              <span className="font-light text-gray-900">$500.00 total</span>
             </div>
           </CardContent>
         </Card>
 
-        <Tabs defaultValue="active" className="space-y-4">
-          <TabsList className="grid w-full grid-cols-3 backdrop-blur-xl bg-card border border-border">
-            <TabsTrigger value="active">Active Streams</TabsTrigger>
-            <TabsTrigger value="invoices">Invoices</TabsTrigger>
-            <TabsTrigger value="history">History</TabsTrigger>
+        <Tabs defaultValue="active" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-3 bg-white border border-border/30 rounded-xl">
+            <TabsTrigger value="active" className="font-light">Active Streams</TabsTrigger>
+            <TabsTrigger value="invoices" className="font-light">Invoices</TabsTrigger>
+            <TabsTrigger value="history" className="font-light">History</TabsTrigger>
           </TabsList>
 
           <TabsContent value="active" className="space-y-4">
             {activeStreams.map((stream) => (
-              <Card key={stream.id} className="backdrop-blur-xl bg-card border-border">
+              <Card key={stream.id} className="bg-white border-border/50 shadow-sm rounded-xl hover:shadow-md transition-all duration-300">
                 <CardContent className="pt-6">
                   <div className="flex items-center justify-between mb-4">
                     <div>
-                      <div className="font-medium mb-1 text-foreground">{stream.recipient}</div>
-                      <div className="text-sm text-muted-foreground">Stream #{stream.id}</div>
+                      <div className="font-light mb-1 text-gray-900">{stream.recipient}</div>
+                      <div className="text-sm text-gray-500 font-light">Stream #{stream.id}</div>
                     </div>
-                    <div className="flex items-center gap-2 text-foreground text-sm">
-                      <div className="w-2 h-2 rounded-full bg-black animate-pulse"></div>
-                      Active
+                    <div className="flex items-center gap-2 text-gray-900 text-sm">
+                      <div className="w-2 h-2 rounded-full bg-primary animate-pulse"></div>
+                      <span className="font-light">Active</span>
                     </div>
                   </div>
                   <Progress value={stream.progress} className="mb-2" />
                   <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">${stream.streamed.toFixed(2)} of ${stream.total}</span>
-                    <span className="font-medium text-foreground">{stream.progress.toFixed(1)}%</span>
+                    <span className="text-gray-500 font-light">${stream.streamed.toFixed(2)} of ${stream.total}</span>
+                    <span className="font-light text-gray-900">{stream.progress.toFixed(1)}%</span>
                   </div>
-                  <div className="space-y-2 mt-4">
+                  <div className="space-y-2 mt-6">
                     <div className="flex gap-2">
-                      <Button variant="outline" size="sm" className="flex-1">Pause</Button>
-                      <Button variant="outline" size="sm" className="flex-1">Withdraw</Button>
+                      <Button variant="outline" size="sm" className="flex-1 border-border/30 hover:bg-primary/5 font-light transition-all duration-300">Pause</Button>
+                      <Button variant="outline" size="sm" className="flex-1 border-border/30 hover:bg-primary/5 font-light transition-all duration-300">Withdraw</Button>
                     </div>
                     <div className="flex gap-2">
                       <Link href="/dashboard" className="flex-1">
-                        <Button variant="ghost" size="sm" className="w-full text-xs">
+                        <Button variant="ghost" size="sm" className="w-full text-xs font-light hover:bg-primary/5 transition-all duration-300">
                           Route to Bill Pay
                         </Button>
                       </Link>
                       <Link href="/vault" className="flex-1">
-                        <Button variant="ghost" size="sm" className="w-full text-xs">
+                        <Button variant="ghost" size="sm" className="w-full text-xs font-light hover:bg-primary/5 transition-all duration-300">
                           Move to Vault
                         </Button>
                       </Link>
@@ -158,23 +158,23 @@ export default function Streams() {
 
           <TabsContent value="invoices" className="space-y-4">
             {invoices.map((invoice) => (
-              <Card key={invoice.id} className="backdrop-blur-xl bg-card border-border">
+              <Card key={invoice.id} className="bg-white border-border/50 shadow-sm rounded-xl hover:shadow-md transition-all duration-300">
                 <CardContent className="pt-6">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-accent flex items-center justify-center">
-                        {invoice.status === "Paid" && <CheckCircle2 className="h-5 w-5 text-foreground" />}
-                        {invoice.status === "Approved" && <Clock className="h-5 w-5 text-foreground" />}
-                        {invoice.status === "Pending" && <Clock className="h-5 w-5 text-foreground" />}
+                      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary/5 to-primary/10 flex items-center justify-center">
+                        {invoice.status === "Paid" && <CheckCircle2 className="h-5 w-5 text-primary/70" />}
+                        {invoice.status === "Approved" && <Clock className="h-5 w-5 text-primary/70" />}
+                        {invoice.status === "Pending" && <Clock className="h-5 w-5 text-primary/70" />}
                       </div>
                       <div>
-                        <div className="font-medium text-foreground">{invoice.client}</div>
-                        <div className="text-sm text-muted-foreground">{invoice.id}</div>
+                        <div className="font-light text-gray-900">{invoice.client}</div>
+                        <div className="text-sm text-gray-500 font-light">{invoice.id}</div>
                       </div>
                     </div>
                     <div className="text-right">
-                      <div className="font-semibold text-foreground">${invoice.amount}</div>
-                      <div className={`text-sm ${invoice.color}`}>{invoice.status}</div>
+                      <div className="font-light text-gray-900">${invoice.amount}</div>
+                      <div className={`text-sm ${invoice.color} font-light`}>{invoice.status}</div>
                     </div>
                   </div>
                 </CardContent>
@@ -184,17 +184,17 @@ export default function Streams() {
 
           <TabsContent value="history" className="space-y-4">
             {history.map((item) => (
-              <Card key={item.id} className="backdrop-blur-xl bg-card border-border">
+              <Card key={item.id} className="bg-white border-border/50 shadow-sm rounded-xl hover:shadow-md transition-all duration-300">
                 <CardContent className="pt-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <div className="font-medium mb-1 text-foreground">{item.recipient}</div>
-                      <div className="text-sm text-muted-foreground">{item.date}</div>
+                      <div className="font-light mb-1 text-gray-900">{item.recipient}</div>
+                      <div className="text-sm text-gray-500 font-light">{item.date}</div>
                     </div>
                     <div className="text-right">
-                      <div className="font-semibold text-foreground">${item.amount}</div>
-                      <div className="text-sm text-foreground flex items-center gap-1">
-                        <CheckCircle2 className="h-3 w-3" />
+                      <div className="font-light text-gray-900">${item.amount}</div>
+                      <div className="text-sm text-gray-900 flex items-center gap-1 font-light">
+                        <CheckCircle2 className="h-3 w-3 text-primary/70" />
                         {item.status}
                       </div>
                     </div>

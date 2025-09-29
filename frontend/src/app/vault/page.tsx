@@ -3,14 +3,13 @@
 import { useState } from "react"
 import { Header } from "@/components/ui/header"
 import { Footer } from "@/components/ui/footer"
-import { ArrowLeft, TrendingUp, Users, Award, ArrowUpRight, DollarSign, Target, Shield } from "lucide-react"
+import { ArrowLeft, TrendingUp, Users, Award, ArrowUpRight, DollarSign, Target } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Badge } from "@/components/ui/badge"
 import Link from "next/link"
 
 export default function Vault() {
@@ -26,7 +25,6 @@ export default function Vault() {
       return7d: "+12.3%", 
       return30d: "+45.2%", 
       followers: 1234,
-      risk: "Medium",
       strategy: "Swing Trading"
     },
     { 
@@ -37,7 +35,6 @@ export default function Vault() {
       return7d: "+8.5%", 
       return30d: "+38.5%", 
       followers: 892,
-      risk: "Low",
       strategy: "Yield Farming"
     },
     { 
@@ -48,7 +45,6 @@ export default function Vault() {
       return7d: "+18.4%", 
       return30d: "+62.1%", 
       followers: 2156,
-      risk: "High",
       strategy: "Scalping"
     },
   ]
@@ -59,45 +55,37 @@ export default function Vault() {
     { id: 3, trader: "MoonTrader", invested: 750, current: 912, pnl: "+21.6%", allocation: "30%" },
   ]
 
-  const getRiskColor = (risk: string) => {
-    switch(risk) {
-      case "Low": return "text-green-500 bg-green-500/10"
-      case "Medium": return "text-yellow-500 bg-yellow-500/10"
-      case "High": return "text-red-500 bg-red-500/10"
-      default: return "text-muted-foreground bg-accent0/10"
-    }
-  }
 
   return (
-    <div className="min-h-screen bg-slate-950">
+    <div className="min-h-screen bg-gradient-to-br from-white to-primary/5">
       <Header />
-      <div className="max-w-screen-xl mx-auto px-8 py-6">
-        <div className="flex items-center gap-3 mb-6">
+      <div className="max-w-screen-xl mx-auto px-8 py-12">
+        <div className="flex items-center gap-3 mb-8">
           <Link href="/">
-            <Button variant="ghost" size="icon" className="text-white hover:bg-white/10">
-              <ArrowLeft className="h-5 w-5" />
+            <Button variant="ghost" size="icon" className="hover:bg-primary/10 transition-all duration-300">
+              <ArrowLeft className="h-5 w-5 text-primary/70" />
             </Button>
           </Link>
           <div>
-            <h1 className="text-2xl font-bold text-foreground">Copy Trading Vaults</h1>
-            <p className="text-sm text-muted-foreground">Follow top traders automatically</p>
+            <h1 className="text-2xl font-extralight text-gray-900">Copy Trading Vaults</h1>
+            <p className="text-sm text-gray-500 font-light">Follow top traders automatically</p>
           </div>
         </div>
 
-        <Card className="mb-6 bg-slate-900/50 border-slate-800">
+        <Card className="mb-8 bg-white border-border/50 shadow-sm rounded-xl hover:shadow-md transition-all duration-300">
           <CardContent className="pt-6">
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-3 gap-6">
               <div>
-                <div className="text-sm text-slate-400 mb-1">DEPOSITS</div>
-                <div className="text-2xl font-bold text-white font-mono">$2,250</div>
+                <div className="text-sm text-gray-500 font-light mb-1">DEPOSITS</div>
+                <div className="text-2xl font-extralight text-gray-900">$2,250</div>
               </div>
               <div>
-                <div className="text-sm text-muted-foreground mb-1">Current Value</div>
-                <div className="text-2xl font-bold text-success">$2,731</div>
+                <div className="text-sm text-gray-500 font-light mb-1">Current Value</div>
+                <div className="text-2xl font-extralight text-green-600">$2,731</div>
               </div>
               <div>
-                <div className="text-sm text-muted-foreground mb-1">Total P&L</div>
-                <div className="text-2xl font-bold text-success flex items-center gap-1">
+                <div className="text-sm text-gray-500 font-light mb-1">Total P&L</div>
+                <div className="text-2xl font-extralight text-green-600 flex items-center gap-1">
                   <ArrowUpRight className="h-5 w-5" />
                   +21.4%
                 </div>
@@ -106,100 +94,96 @@ export default function Vault() {
           </CardContent>
         </Card>
 
-        <Tabs defaultValue="leaderboard" className="space-y-4">
-          <TabsList className="grid w-full grid-cols-2 bg-slate-900/50 border border-slate-800">
-            <TabsTrigger value="leaderboard" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white">Top Traders</TabsTrigger>
-            <TabsTrigger value="myvaults" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white">My Vaults</TabsTrigger>
+        <Tabs defaultValue="leaderboard" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-2 bg-white border border-border/30 rounded-xl">
+            <TabsTrigger value="leaderboard" className="font-light">Top Traders</TabsTrigger>
+            <TabsTrigger value="myvaults" className="font-light">My Vaults</TabsTrigger>
           </TabsList>
 
           <TabsContent value="leaderboard" className="space-y-4">
             {topTraders.map((trader, index) => (
-              <Card key={trader.id} className="backdrop-blur-xl bg-card border-border">
-                <CardContent className="pt-6">
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="flex items-center gap-3">
+              <Card key={trader.id} className="bg-white border-border/50 shadow-sm hover:shadow-md transition-all duration-300">
+                <CardContent className="pt-6 pb-6">
+                  <div className="flex items-start justify-between mb-6">
+                    <div className="flex items-center gap-4">
                       <div className="relative">
-                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-purple-500 to-cyan-500 flex items-center justify-center font-bold">
+                        <div className="w-14 h-14 rounded-full bg-primary text-white flex items-center justify-center font-light text-lg">
                           {trader.avatar}
                         </div>
                         {index === 0 && (
-                          <div className="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-yellow-500 flex items-center justify-center">
-                            <Award className="h-3 w-3 text-slate-900" />
+                          <div className="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-gold flex items-center justify-center">
+                            <Award className="h-3 w-3 text-white" />
                           </div>
                         )}
                       </div>
                       <div>
-                        <div className="font-bold text-lg text-foreground">{trader.name}</div>
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <div className="font-light text-lg text-foreground">{trader.name}</div>
+                        <div className="flex items-center gap-2 text-sm font-light text-muted-foreground">
                           <Users className="h-3 w-3" />
                           {trader.followers.toLocaleString()} followers
                         </div>
                       </div>
                     </div>
                     <div className="text-right">
-                      <div className="text-2xl font-bold text-success">{trader.pnl}</div>
-                      <div className="text-xs text-muted-foreground">30d return</div>
+                      <div className="text-2xl font-extralight text-success">{trader.pnl}</div>
+                      <div className="text-xs font-light text-muted-foreground">30d return</div>
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4 mb-4">
-                    <div className="bg-accent rounded-lg p-3">
-                      <div className="text-xs text-muted-foreground mb-1">7d Return</div>
-                      <div className="text-lg font-semibold text-success">{trader.return7d}</div>
+                  <div className="grid grid-cols-2 gap-4 mb-6">
+                    <div className="bg-gradient-to-br from-white to-primary/5 rounded-xl p-4 border border-border/30">
+                      <div className="text-xs font-light text-muted-foreground mb-2">7d Return</div>
+                      <div className="text-lg font-light text-success">{trader.return7d}</div>
                     </div>
-                    <div className="bg-accent rounded-lg p-3">
-                      <div className="text-xs text-muted-foreground mb-1">Strategy</div>
-                      <div className="text-sm font-medium text-foreground">{trader.strategy}</div>
+                    <div className="bg-gradient-to-br from-white to-primary/5 rounded-xl p-4 border border-border/30">
+                      <div className="text-xs font-light text-muted-foreground mb-2">Strategy</div>
+                      <div className="text-sm font-light text-foreground">{trader.strategy}</div>
                     </div>
                   </div>
 
-                  <div className="flex items-center justify-between">
-                    <Badge className={getRiskColor(trader.risk)}>
-                      <Shield className="h-3 w-3 mr-1" />
-                      {trader.risk} Risk
-                    </Badge>
+                  <div className="flex items-center justify-end">
                     <Dialog open={open} onOpenChange={setOpen}>
                       <DialogTrigger asChild>
-                        <Button className="bg-gradient-to-r from-purple-600 to-cyan-600 hover:from-purple-700 hover:to-cyan-700">
+                        <Button className="bg-primary hover:bg-primary/90 text-white font-light transition-all duration-200 shadow-sm hover:shadow-md">
                           <TrendingUp className="h-4 w-4 mr-2" />
                           Follow Trader
                         </Button>
                       </DialogTrigger>
-                      <DialogContent className="bg-slate-900 border-slate-800 text-white">
+                      <DialogContent className="bg-white border-border/50">
                         <DialogHeader>
-                          <DialogTitle>Follow {trader.name}</DialogTitle>
-                          <DialogDescription className="text-muted-foreground">
+                          <DialogTitle className="font-light">Follow {trader.name}</DialogTitle>
+                          <DialogDescription className="font-light">
                             Allocate funds to copy this trader's strategy
                           </DialogDescription>
                         </DialogHeader>
                         <div className="space-y-4 py-4">
                           <div className="space-y-2">
-                            <Label>Amount (USDC)</Label>
+                            <Label className="font-light">Amount (USDC)</Label>
                             <Input 
                               type="number" 
                               value={amount}
                               onChange={(e) => setAmount(e.target.value)}
-                              className="bg-slate-800 border-slate-700"
+                              className="border-border/50 font-light"
                             />
                           </div>
-                          <div className="bg-slate-800/50 rounded-lg p-4 space-y-2">
+                          <div className="bg-gradient-to-br from-white to-primary/5 rounded-xl p-4 space-y-2 border border-border/30">
                             <div className="flex justify-between text-sm">
-                              <span className="text-muted-foreground">Trader</span>
-                              <span className="font-medium">{trader.name}</span>
+                              <span className="font-light text-muted-foreground">Trader</span>
+                              <span className="font-light">{trader.name}</span>
                             </div>
                             <div className="flex justify-between text-sm">
-                              <span className="text-muted-foreground">Expected ROI</span>
-                              <span className="font-medium text-green-400">{trader.pnl}</span>
+                              <span className="font-light text-muted-foreground">Expected ROI</span>
+                              <span className="font-light text-success">{trader.pnl}</span>
                             </div>
                             <div className="flex justify-between text-sm">
-                              <span className="text-muted-foreground">Risk Level</span>
-                              <span className="font-medium">{trader.risk}</span>
+                              <span className="font-light text-muted-foreground">Strategy</span>
+                              <span className="font-light">{trader.strategy}</span>
                             </div>
                           </div>
                         </div>
                         <DialogFooter>
-                          <Button variant="outline" onClick={() => setOpen(false)} className="border-slate-700">Cancel</Button>
-                          <Button onClick={() => setOpen(false)} className="bg-gradient-to-r from-purple-600 to-cyan-600">
+                          <Button variant="outline" onClick={() => setOpen(false)} className="border-border/50 font-light">Cancel</Button>
+                          <Button onClick={() => setOpen(false)} className="bg-primary hover:bg-primary/90 text-white font-light">
                             Confirm & Follow
                           </Button>
                         </DialogFooter>
@@ -213,36 +197,36 @@ export default function Vault() {
 
           <TabsContent value="myvaults" className="space-y-4">
             {myVaults.map((vault) => (
-              <Card key={vault.id} className="backdrop-blur-xl bg-card border-border">
-                <CardContent className="pt-6">
-                  <div className="flex items-center justify-between mb-4">
+              <Card key={vault.id} className="bg-white border-border/50 shadow-sm hover:shadow-md transition-all duration-300">
+                <CardContent className="pt-6 pb-6">
+                  <div className="flex items-center justify-between mb-6">
                     <div>
-                      <div className="font-bold text-lg mb-1">{vault.trader}</div>
-                      <div className="text-sm text-muted-foreground">Allocation: {vault.allocation}</div>
+                      <div className="font-light text-lg mb-1">{vault.trader}</div>
+                      <div className="text-sm font-light text-muted-foreground">Allocation: {vault.allocation}</div>
                     </div>
                     <div className="text-right">
-                      <div className="text-2xl font-bold text-green-400">{vault.pnl}</div>
-                      <div className="text-xs text-muted-foreground">P&L</div>
+                      <div className="text-2xl font-extralight text-success">{vault.pnl}</div>
+                      <div className="text-xs font-light text-muted-foreground">P&L</div>
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4 mb-4">
-                    <div className="bg-accent rounded-lg p-3">
-                      <div className="text-xs text-muted-foreground mb-1">Invested</div>
-                      <div className="text-lg font-semibold">${vault.invested}</div>
+                  <div className="grid grid-cols-2 gap-4 mb-6">
+                    <div className="bg-gradient-to-br from-white to-primary/5 rounded-xl p-4 border border-border/30">
+                      <div className="text-xs font-light text-muted-foreground mb-2">Invested</div>
+                      <div className="text-lg font-light">${vault.invested}</div>
                     </div>
-                    <div className="bg-accent rounded-lg p-3">
-                      <div className="text-xs text-muted-foreground mb-1">Current Value</div>
-                      <div className="text-lg font-semibold text-green-400">${vault.current}</div>
+                    <div className="bg-gradient-to-br from-white to-primary/5 rounded-xl p-4 border border-border/30">
+                      <div className="text-xs font-light text-muted-foreground mb-2">Current Value</div>
+                      <div className="text-lg font-light text-success">${vault.current}</div>
                     </div>
                   </div>
 
-                  <div className="space-y-2">
-                    <div className="flex gap-2">
-                      <Button variant="outline" size="sm" className="flex-1 border-slate-700 hover:bg-slate-800">
+                  <div className="space-y-3">
+                    <div className="flex gap-3">
+                      <Button variant="outline" size="sm" className="flex-1 border-primary/50 text-primary hover:bg-primary/5 font-light transition-all duration-200">
                         Withdraw
                       </Button>
-                      <Button variant="outline" size="sm" className="flex-1 border-slate-700 hover:bg-slate-800">
+                      <Button variant="outline" size="sm" className="flex-1 border-primary/50 text-primary hover:bg-primary/5 font-light transition-all duration-200">
                         Add Funds
                       </Button>
                     </div>

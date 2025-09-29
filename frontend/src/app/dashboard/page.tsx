@@ -44,59 +44,59 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <Header />
-      <div className="max-w-screen-xl mx-auto px-8 py-6">
-        <div className="flex items-center gap-3 mb-6">
+      <div className="max-w-screen-xl mx-auto px-8 py-12">
+        <div className="flex items-center gap-4 mb-12">
           <Link href="/">
-            <Button variant="ghost" size="icon">
+            <Button variant="ghost" size="icon" className="hover:bg-primary/5 text-muted-foreground hover:text-primary transition-all duration-200">
               <ArrowLeft className="h-5 w-5" />
             </Button>
           </Link>
           <div>
-            <h1 className="text-2xl font-bold text-foreground">Bill Payments</h1>
-            <p className="text-sm text-muted-foreground">Pay with stablecoins</p>
+            <h1 className="text-2xl font-extralight text-foreground">Bill Payments</h1>
+            <p className="text-sm font-light text-muted-foreground mt-1">Pay with stablecoins</p>
           </div>
         </div>
 
-        <Card className="mb-8 backdrop-blur-xl bg-card border-border">
-          <CardContent className="pt-6">
+        <Card className="mb-8 bg-white border-border/50 shadow-sm hover:shadow-md transition-all duration-300">
+          <CardContent className="pt-8 pb-8">
             <div className="flex items-center justify-between">
               <div>
-                <div className="text-sm text-muted-foreground mb-1">Available Balance</div>
-                <div className="text-3xl font-bold text-foreground">$1,245.83</div>
-                <div className="text-sm text-muted-foreground">USDC</div>
+                <div className="text-sm font-light text-muted-foreground mb-2">Available Balance</div>
+                <div className="text-3xl font-extralight text-foreground">$1,245.83</div>
+                <div className="text-sm font-light text-muted-foreground mt-1">USDC</div>
               </div>
-              <div className="w-16 h-16 rounded-full bg-black/10 flex items-center justify-center">
-                <Zap className="h-8 w-8 text-foreground" />
+              <div className="w-16 h-16 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
+                <Zap className="h-8 w-8 text-white" />
               </div>
             </div>
           </CardContent>
         </Card>
 
         <div className="mb-8">
-          <h2 className="text-lg font-semibold mb-4">Categories</h2>
-          <div className="grid grid-cols-3 gap-3">
+          <h2 className="text-lg font-light mb-6">Categories</h2>
+          <div className="grid grid-cols-3 gap-4">
             {categories.map((category) => (
               <Card 
                 key={category.id}
-                className="backdrop-blur-xl bg-card border-border hover:border-primary/50 hover:shadow-xl transition-all cursor-pointer"
+                className="bg-white border-border/50 shadow-sm hover:shadow-md hover:border-primary/30 transition-all duration-300 cursor-pointer"
                 onClick={() => setSelectedCategory(category.id)}
               >
-                <CardContent className="pt-6 text-center">
-                  <div className={`mx-auto w-14 h-14 rounded-2xl backdrop-blur-sm ${category.color} flex items-center justify-center mb-3`}>
+                <CardContent className="pt-8 pb-8 text-center">
+                  <div className={`mx-auto w-14 h-14 rounded-2xl ${category.color} flex items-center justify-center mb-4`}>
                     {React.createElement(category.icon, { className: "h-7 w-7" })}
                   </div>
-                  <div className="text-sm font-medium text-foreground">{category.name}</div>
+                  <div className="text-sm font-light text-foreground">{category.name}</div>
                 </CardContent>
               </Card>
             ))}
           </div>
         </div>
 
-        <Card className="mb-6 backdrop-blur-xl bg-card border-border">
+        <Card className="mb-8 bg-white border-border/50 shadow-sm">
           <CardHeader>
-            <CardTitle>Recent Bills</CardTitle>
+            <CardTitle className="font-light text-xl">Recent Bills</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-3">
+          <CardContent className="space-y-4">
             {recentBills.map((bill) => (
               <div key={bill.id} className="flex items-center justify-between p-3 border rounded-lg">
                 <div className="flex items-center gap-3">

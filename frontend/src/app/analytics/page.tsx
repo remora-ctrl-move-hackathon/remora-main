@@ -40,37 +40,37 @@ export default function Analytics() {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <Header />
-      <div className="max-w-screen-xl mx-auto px-8 py-6">
-        <div className="flex items-center gap-3 mb-6">
+      <div className="max-w-screen-xl mx-auto px-8 py-12">
+        <div className="flex items-center gap-4 mb-12">
           <Link href="/">
-            <Button variant="ghost" size="icon" className="hover:bg-accent">
+            <Button variant="ghost" size="icon" className="hover:bg-primary/5 text-muted-foreground hover:text-primary transition-all duration-200">
               <ArrowLeft className="h-5 w-5" />
             </Button>
           </Link>
           <div>
-            <h1 className="text-2xl font-bold text-foreground">Analytics Dashboard</h1>
-            <p className="text-sm text-muted-foreground">Financial insights & metrics</p>
+            <h1 className="text-2xl font-extralight text-foreground">Analytics Dashboard</h1>
+            <p className="text-sm font-light text-muted-foreground mt-1">Financial insights & metrics</p>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           {stats.map((stat, index) => (
-            <Card key={index} className="backdrop-blur-xl bg-card border-border hover:border-primary/50 hover:shadow-xl transition-all">
-              <CardContent className="pt-6">
-                <div className="flex items-center justify-between mb-3">
-                  <span className="text-sm text-muted-foreground">{stat.label}</span>
-                  <div className="w-10 h-10 rounded-full bg-black flex items-center justify-center">
+            <Card key={index} className="bg-white border-border/50 shadow-sm hover:shadow-md transition-all duration-300">
+              <CardContent className="pt-6 pb-6">
+                <div className="flex items-center justify-between mb-4">
+                  <span className="text-sm font-light text-muted-foreground">{stat.label}</span>
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
                     <stat.icon className="h-5 w-5 text-white" />
                   </div>
                 </div>
-                <div className="text-2xl font-bold mb-2">{stat.value}</div>
-                <div className="flex items-center gap-1 text-sm">
+                <div className="text-2xl font-extralight mb-3">{stat.value}</div>
+                <div className="flex items-center gap-1 text-sm font-light">
                   {stat.trend === "up" ? (
-                    <ArrowUpRight className="h-4 w-4 text-foreground" />
+                    <ArrowUpRight className="h-4 w-4 text-success" />
                   ) : (
-                    <ArrowDownRight className="h-4 w-4 text-foreground" />
+                    <ArrowDownRight className="h-4 w-4 text-destructive" />
                   )}
-                  <span className="text-foreground">
+                  <span className={stat.trend === "up" ? "text-success" : "text-destructive"}>
                     {stat.change}
                   </span>
                   <span className="text-muted-foreground">vs last month</span>
@@ -80,22 +80,22 @@ export default function Analytics() {
           ))}
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-          <Card className="md:col-span-2 backdrop-blur-xl bg-card border-border">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <Card className="md:col-span-2 bg-white border-border/50 shadow-sm">
             <CardHeader>
-              <CardTitle>Transaction History</CardTitle>
-              <CardDescription>Recent financial activities</CardDescription>
+              <CardTitle className="font-light text-xl">Transaction History</CardTitle>
+              <CardDescription className="font-light">Recent financial activities</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-3">
+              <div className="space-y-4">
                 {transactions.map((transaction) => (
-                  <div key={transaction.id} className="flex items-center justify-between p-3 border border-border rounded-lg hover:border-primary/50 transition-colors">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full flex items-center justify-center bg-accent">
+                  <div key={transaction.id} className="flex items-center justify-between p-4 border border-border/30 rounded-xl hover:border-primary/30 hover:shadow-sm transition-all duration-200">
+                    <div className="flex items-center gap-4">
+                      <div className="w-10 h-10 rounded-full flex items-center justify-center bg-gradient-to-br from-primary/10 to-primary/5">
                         {transaction.trend === "up" ? (
-                          <ArrowUpRight className="h-5 w-5 text-foreground" />
+                          <ArrowUpRight className="h-5 w-5 text-success" />
                         ) : (
-                          <ArrowDownRight className="h-5 w-5 text-foreground" />
+                          <ArrowDownRight className="h-5 w-5 text-destructive" />
                         )}
                       </div>
                       <div>

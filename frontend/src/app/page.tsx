@@ -7,7 +7,6 @@ import {
   Clock, 
   Users, 
   Building2,
-  Briefcase,
   Globe2,
   Landmark,
   BarChart3,
@@ -15,9 +14,7 @@ import {
   ArrowRightLeft,
   Shield,
   Activity,
-  Coins,
-  CircleDollarSign,
-  Banknote
+  Zap
 } from "lucide-react"
 import { Card } from "@/components/ui/card"
 import { Header } from "@/components/ui/header"
@@ -101,8 +98,8 @@ export default function Home() {
     {
       id: 1,
       corridor: "US → Nigeria",
-      fromIcon: CircleDollarSign,
-      toIcon: Banknote,
+      fromIcon: Wallet,
+      toIcon: Wallet,
       volume: "453M",
       currency: "NGN",
       value: "$50.7M",
@@ -113,8 +110,8 @@ export default function Home() {
     {
       id: 2,
       corridor: "UK → India",
-      fromIcon: Banknote,
-      toIcon: Coins,
+      fromIcon: Wallet,
+      toIcon: Wallet,
       volume: "221M",
       currency: "INR",
       value: "$24.7M",
@@ -125,7 +122,7 @@ export default function Home() {
     {
       id: 3,
       corridor: "US → Mexico",
-      fromIcon: CircleDollarSign,
+      fromIcon: Wallet,
       toIcon: Wallet,
       volume: "8.2M",
       currency: "MXN",
@@ -170,68 +167,68 @@ export default function Home() {
   ]
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="min-h-screen bg-white flex flex-col">
       <Header />
       
       <div className="flex-1">
         {/* Stats Header */}
-        <div className="border-b border-border">
-          <div className="max-w-screen-xl mx-auto px-8 py-8">
-            <div className="flex items-center justify-between mb-6">
-              <h1 className="text-sm font-medium text-primary uppercase tracking-wider">MAIN MARKET</h1>
-              <Badge variant="outline" className="text-xs border-primary/20 text-primary">
-                <Clock className="h-3 w-3 mr-1" />
+        <div className="bg-gradient-to-r from-white to-gray-50/50">
+          <div className="max-w-screen-xl mx-auto px-8 py-12">
+            <div className="flex items-center justify-between mb-10">
+              <h1 className="text-base font-light text-gray-500 uppercase tracking-widest">MAIN MARKET</h1>
+              <Badge variant="outline" className="text-xs border-primary/20 text-primary font-light">
+                <div className="w-2 h-2 rounded-full bg-primary animate-pulse mr-2" />
                 Live
               </Badge>
             </div>
             
-            <div className="grid grid-cols-3 gap-8">
+            <div className="grid grid-cols-3 gap-12">
               <div>
-                <p className="text-xs text-muted-foreground mb-2 uppercase tracking-wider">Total Volume</p>
-                <p className="text-3xl font-bold font-mono">{stats.totalVolume}</p>
+                <p className="text-xs text-gray-400 mb-3 uppercase tracking-wider font-light">Total Volume</p>
+                <p className="text-4xl font-extralight tracking-tight">{stats.totalVolume}</p>
               </div>
               <div>
-                <p className="text-xs text-muted-foreground mb-2 uppercase tracking-wider">Active Streams</p>
-                <p className="text-3xl font-bold font-mono">{stats.activeStreams}</p>
+                <p className="text-xs text-gray-400 mb-3 uppercase tracking-wider font-light">Active Streams</p>
+                <p className="text-4xl font-extralight tracking-tight">{stats.activeStreams}</p>
               </div>
               <div>
-                <p className="text-xs text-muted-foreground mb-2 uppercase tracking-wider">TVL</p>
-                <p className="text-3xl font-bold font-mono">{stats.totalRemittance}</p>
+                <p className="text-xs text-gray-400 mb-3 uppercase tracking-wider font-light">TVL</p>
+                <p className="text-4xl font-extralight tracking-tight">{stats.totalRemittance}</p>
               </div>
             </div>
           </div>
         </div>
 
         {/* Tab Navigation */}
-        <div className="border-b border-border">
+        <div className="bg-white sticky top-16 z-10">
           <div className="max-w-screen-xl mx-auto px-8">
-            <div className="flex gap-8">
+            <div className="flex gap-12 border-b border-gray-100">
               <button
                 onClick={() => setActiveTab("streams")}
-                className={`py-4 text-xs font-medium border-b-2 transition-colors uppercase tracking-wider ${
+                className={`py-6 text-xs font-light border-b-2 transition-all uppercase tracking-wider ${
                   activeTab === "streams" 
                     ? "text-primary border-primary" 
-                    : "text-muted-foreground border-transparent hover:text-foreground"
+                    : "text-gray-400 border-transparent hover:text-gray-600"
                 }`}
               >
                 Payment Streams
               </button>
               <button
                 onClick={() => setActiveTab("remittance")}
-                className={`py-4 text-xs font-medium border-b-2 transition-colors uppercase tracking-wider ${
+                className={`py-6 text-xs font-light border-b-2 transition-all uppercase tracking-wider ${
                   activeTab === "remittance"
                     ? "text-primary border-primary"
-                    : "text-muted-foreground border-transparent hover:text-foreground"
+                    : "text-gray-400 border-transparent hover:text-gray-600"
                 }`}
               >
                 Remittance Corridors
               </button>
               <button
                 onClick={() => setActiveTab("vaults")}
-                className={`py-4 text-xs font-medium border-b-2 transition-colors uppercase tracking-wider ${
+                className={`py-6 text-xs font-light border-b-2 transition-all uppercase tracking-wider ${
                   activeTab === "vaults"
                     ? "text-primary border-primary"
-                    : "text-muted-foreground border-transparent hover:text-foreground"
+                    : "text-gray-400 border-transparent hover:text-gray-600"
                 }`}
               >
                 Copy Trading Vaults
@@ -241,11 +238,11 @@ export default function Home() {
         </div>
 
         {/* Content Tables */}
-        <div className="max-w-screen-xl mx-auto px-8 py-8">
+        <div className="max-w-screen-xl mx-auto px-8 py-12">
           {activeTab === "streams" && (
-            <div className="space-y-2">
+            <div className="space-y-3">
               {/* Table Header */}
-              <div className="grid grid-cols-12 gap-4 px-8 py-3 text-xs text-muted-foreground uppercase tracking-wider">
+              <div className="grid grid-cols-12 gap-4 px-6 py-4 text-xs text-gray-400 uppercase tracking-wider font-light">
                 <div className="col-span-3">Recipient</div>
                 <div className="col-span-2 text-right">Amount</div>
                 <div className="col-span-2 text-right">Rate</div>
@@ -257,53 +254,53 @@ export default function Home() {
               {/* Table Rows */}
               {streams.map((stream) => (
                 <Link href="/streams" key={stream.id}>
-                  <Card className="bg-card border-border hover:border-primary/50 transition-all cursor-pointer p-4 mb-2">
+                  <Card className="bg-white border-gray-100 hover:border-primary/30 hover:shadow-lg transition-all cursor-pointer p-6 mb-3">
                     <div className="grid grid-cols-12 gap-4 items-center">
-                      <div className="col-span-3 flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-lg bg-accent flex items-center justify-center">
-                          <stream.icon className="h-5 w-5 text-primary" />
+                      <div className="col-span-3 flex items-center gap-4">
+                        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/5 to-primary/10 flex items-center justify-center">
+                          <stream.icon className="h-5 w-5 text-primary" strokeWidth={1.5} />
                         </div>
                         <div>
-                          <p className="text-sm font-medium text-foreground">{stream.recipient}</p>
-                          <p className="text-xs text-muted-foreground">{stream.currency}</p>
+                          <p className="text-sm font-normal text-gray-900">{stream.recipient}</p>
+                          <p className="text-xs text-gray-400 font-light">{stream.currency}</p>
                         </div>
                       </div>
                       
                       <div className="col-span-2 text-right">
-                        <p className="text-sm font-mono font-bold text-primary">{stream.amount} {stream.currency}</p>
-                        <p className="text-xs text-muted-foreground font-mono">{stream.value}</p>
+                        <p className="text-sm font-light text-gray-900">{stream.amount} {stream.currency}</p>
+                        <p className="text-xs text-gray-400 font-light">{stream.value}</p>
                       </div>
                       
                       <div className="col-span-2 text-right">
-                        <p className="text-sm font-mono text-foreground">{stream.rate}</p>
+                        <p className="text-sm font-light text-gray-600">{stream.rate}</p>
                       </div>
                       
                       <div className="col-span-2">
                         <div className="flex items-center gap-3">
-                          <div className="flex-1 h-1.5 bg-accent rounded-full overflow-hidden">
+                          <div className="flex-1 h-1 bg-gray-100 rounded-full overflow-hidden">
                             <div 
-                              className="h-full bg-primary transition-all rounded-full"
+                              className="h-full bg-gradient-to-r from-primary to-primary/70 transition-all rounded-full"
                               style={{ width: `${stream.progress}%` }}
                             />
                           </div>
-                          <span className="text-xs font-mono text-primary">{stream.progress}%</span>
+                          <span className="text-xs font-light text-gray-500">{stream.progress}%</span>
                         </div>
                       </div>
                       
                       <div className="col-span-2 text-right">
                         <div className="flex items-center justify-end gap-1">
-                          <TrendingUp className="h-3 w-3 text-success" />
-                          <span className="text-sm font-mono text-success">{stream.apy}</span>
+                          <TrendingUp className="h-3 w-3 text-primary" strokeWidth={1.5} />
+                          <span className="text-sm font-light text-primary">{stream.apy}</span>
                         </div>
                       </div>
                       
                       <div className="col-span-1 text-right">
                         {stream.status === "active" ? (
-                          <Badge className="bg-success/10 text-success border-success/20 text-xs">
+                          <Badge className="bg-primary/10 text-primary border-0 text-xs font-light">
                             Active
                           </Badge>
                         ) : (
-                          <Badge className="bg-accent text-muted-foreground border-border text-xs">
+                          <Badge className="bg-gray-100 text-gray-400 border-0 text-xs font-light">
                             Paused
                           </Badge>
                         )}
@@ -316,9 +313,9 @@ export default function Home() {
           )}
 
           {activeTab === "remittance" && (
-            <div className="space-y-2">
+            <div className="space-y-3">
               {/* Table Header */}
-              <div className="grid grid-cols-12 gap-4 px-8 py-3 text-xs text-muted-foreground uppercase tracking-wider">
+              <div className="grid grid-cols-12 gap-4 px-6 py-4 text-xs text-gray-400 uppercase tracking-wider font-light">
                 <div className="col-span-3">Corridor</div>
                 <div className="col-span-2 text-right">Volume</div>
                 <div className="col-span-2 text-right">Transactions</div>
@@ -330,47 +327,47 @@ export default function Home() {
               {/* Table Rows */}
               {remittances.map((corridor) => (
                 <Link href="/remit" key={corridor.id}>
-                  <Card className="bg-card border-border hover:border-primary/50 transition-all cursor-pointer p-4 mb-2">
+                  <Card className="bg-white border-gray-100 hover:border-primary/30 hover:shadow-lg transition-all cursor-pointer p-6 mb-3">
                     <div className="grid grid-cols-12 gap-4 items-center">
-                      <div className="col-span-3 flex items-center gap-3">
+                      <div className="col-span-3 flex items-center gap-4">
                         <div className="flex items-center gap-2">
-                          <div className="w-8 h-8 rounded-lg bg-accent flex items-center justify-center">
-                            <corridor.fromIcon className="h-4 w-4 text-muted-foreground" />
+                          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary/5 to-primary/10 flex items-center justify-center">
+                            <corridor.fromIcon className="h-4 w-4 text-primary" strokeWidth={1.5} />
                           </div>
-                          <ArrowRightLeft className="h-3 w-3 text-muted-foreground" />
-                          <div className="w-8 h-8 rounded-lg bg-accent flex items-center justify-center">
-                            <corridor.toIcon className="h-4 w-4 text-muted-foreground" />
+                          <ArrowRightLeft className="h-3 w-3 text-gray-300" strokeWidth={1.5} />
+                          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-secondary/5 to-secondary/10 flex items-center justify-center">
+                            <corridor.toIcon className="h-4 w-4 text-secondary" strokeWidth={1.5} />
                           </div>
                         </div>
                         <div>
-                          <p className="text-sm font-medium text-foreground">{corridor.corridor}</p>
-                          <p className="text-xs text-muted-foreground">{corridor.currency}</p>
+                          <p className="text-sm font-normal text-gray-900">{corridor.corridor}</p>
+                          <p className="text-xs text-gray-400 font-light">{corridor.currency}</p>
                         </div>
                       </div>
                       
                       <div className="col-span-2 text-right">
-                        <p className="text-sm font-mono font-bold text-primary">{corridor.volume}</p>
-                        <p className="text-xs text-muted-foreground font-mono">{corridor.value}</p>
+                        <p className="text-sm font-light text-gray-900">{corridor.volume}</p>
+                        <p className="text-xs text-gray-400 font-light">{corridor.value}</p>
                       </div>
                       
                       <div className="col-span-2 text-right">
-                        <p className="text-sm font-mono text-foreground">{corridor.transactions}</p>
-                        <p className="text-xs text-muted-foreground">this month</p>
+                        <p className="text-sm font-light text-gray-600">{corridor.transactions}</p>
+                        <p className="text-xs text-gray-400 font-light">this month</p>
                       </div>
                       
                       <div className="col-span-2 text-center">
-                        <Badge variant="outline" className="text-xs font-mono border-primary/20">
-                          <Clock className="h-3 w-3 mr-1" />
+                        <Badge variant="outline" className="text-xs font-light border-gray-200">
+                          <Zap className="h-3 w-3 mr-1" strokeWidth={1.5} />
                           {corridor.speed}
                         </Badge>
                       </div>
                       
                       <div className="col-span-2 text-right">
-                        <p className="text-sm font-mono text-success">{corridor.fee}</p>
+                        <p className="text-sm font-light text-primary">{corridor.fee}</p>
                       </div>
                       
                       <div className="col-span-1 text-right">
-                        <ArrowUpRight className="h-4 w-4 text-muted-foreground" />
+                        <ArrowUpRight className="h-4 w-4 text-gray-300" strokeWidth={1.5} />
                       </div>
                     </div>
                   </Card>
@@ -380,9 +377,9 @@ export default function Home() {
           )}
 
           {activeTab === "vaults" && (
-            <div className="space-y-2">
+            <div className="space-y-3">
               {/* Table Header */}
-              <div className="grid grid-cols-12 gap-4 px-8 py-3 text-xs text-muted-foreground uppercase tracking-wider">
+              <div className="grid grid-cols-12 gap-4 px-6 py-4 text-xs text-gray-400 uppercase tracking-wider font-light">
                 <div className="col-span-3">Vault</div>
                 <div className="col-span-2 text-right">TVL</div>
                 <div className="col-span-2 text-right">APY</div>
@@ -394,36 +391,36 @@ export default function Home() {
               {/* Table Rows */}
               {vaults.map((vault) => (
                 <Link href="/vault" key={vault.id}>
-                  <Card className="bg-card border-border hover:border-primary/50 transition-all cursor-pointer p-4 mb-2">
+                  <Card className="bg-white border-gray-100 hover:border-primary/30 hover:shadow-lg transition-all cursor-pointer p-6 mb-3">
                     <div className="grid grid-cols-12 gap-4 items-center">
-                      <div className="col-span-3 flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-lg bg-accent flex items-center justify-center">
-                          <vault.icon className="h-5 w-5 text-primary" />
+                      <div className="col-span-3 flex items-center gap-4">
+                        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/5 to-primary/10 flex items-center justify-center">
+                          <vault.icon className="h-5 w-5 text-primary" strokeWidth={1.5} />
                         </div>
                         <div>
-                          <p className="text-sm font-medium text-foreground">{vault.name}</p>
-                          <p className="text-xs text-muted-foreground">by {vault.manager}</p>
+                          <p className="text-sm font-normal text-gray-900">{vault.name}</p>
+                          <p className="text-xs text-gray-400 font-light">by {vault.manager}</p>
                         </div>
                       </div>
                       
                       <div className="col-span-2 text-right">
-                        <p className="text-sm font-mono font-bold text-foreground">{vault.tvl}</p>
+                        <p className="text-sm font-light text-gray-900">{vault.tvl}</p>
                       </div>
                       
                       <div className="col-span-2 text-right">
                         <div className="flex items-center justify-end gap-1">
-                          <TrendingUp className="h-3 w-3 text-success" />
-                          <span className="text-sm font-mono text-success">{vault.apy}</span>
+                          <TrendingUp className="h-3 w-3 text-primary" strokeWidth={1.5} />
+                          <span className="text-sm font-light text-primary">{vault.apy}</span>
                         </div>
                       </div>
                       
                       <div className="col-span-2 text-center">
                         <Badge 
                           variant="outline" 
-                          className={`text-xs ${
+                          className={`text-xs font-light ${
                             vault.risk === "Low" 
-                              ? "border-success/20 text-success" 
-                              : "border-warning/20 text-warning"
+                              ? "border-green-200 text-green-600 bg-green-50" 
+                              : "border-yellow-200 text-yellow-600 bg-yellow-50"
                           }`}
                         >
                           {vault.risk}
@@ -432,13 +429,13 @@ export default function Home() {
                       
                       <div className="col-span-2 text-right">
                         <div className="flex items-center justify-end gap-1">
-                          <Users className="h-3 w-3 text-muted-foreground" />
-                          <span className="text-sm font-mono">{vault.investors}</span>
+                          <Users className="h-3 w-3 text-gray-400" strokeWidth={1.5} />
+                          <span className="text-sm font-light text-gray-600">{vault.investors}</span>
                         </div>
                       </div>
                       
                       <div className="col-span-1 text-right">
-                        <ArrowUpRight className="h-4 w-4 text-muted-foreground" />
+                        <ArrowUpRight className="h-4 w-4 text-gray-300" strokeWidth={1.5} />
                       </div>
                     </div>
                   </Card>
