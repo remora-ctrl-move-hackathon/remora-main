@@ -1,0 +1,121 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* colors */
+    --background: 221 85% 5%;
+    --foreground: 0 0% 100%;
+
+    --card: 221 65% 9%;
+    --card-foreground: 221 100% 57%;
+
+    --popover: 221 59% 12%;
+    --popover-foreground: 221 100% 57%;
+
+    --primary: 221 100% 57%;
+    --primary-foreground: var(--secondary);
+
+    --secondary: 194 82% 76%;
+    --secondary-foreground: var(--card);
+
+    --muted: 221 34% 65%;
+    --muted-foreground: 221 34% 65%;
+
+    --accent: 219 17% 19%;
+    --accent-foreground: 0 0% 80%;
+
+    --success: 158 56% 48%;
+    --success-foreground: 0 0% 0%;
+
+    --verified: 130 50% 65%;
+
+    --warning: 33 92% 61%;
+    --warning-foreground: 0 0% 0%;
+
+    --destructive: 0 86% 60%;
+    --destructive-foreground: var(--foreground);
+
+    --border: 221 44% 15%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 221 44% 15%;
+
+    --gold: 51 96% 67%;
+    --silver: 132 6% 85%;
+    --bronze: 19 65% 68%;
+
+    /* borderRadius */
+    --radius: 0.5rem;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground font-sans text-sm;
+  }
+  
+  h1 {
+    @apply text-xl font-medium;
+  }
+  
+  h2 {
+    @apply text-lg font-medium;
+  }
+  
+  h3 {
+    @apply text-base font-medium;
+  }
+  
+  p {
+    @apply text-sm;
+  }
+}
+
+/* Focus */
+:focus-visible {
+  outline: none;
+}
+
+/* Card Styles */
+.card-gradient {
+  background: linear-gradient(135deg, transparent, hsla(var(--primary) / 0.1));
+  position: relative;
+}
+
+.card-gradient::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: calc(var(--radius) - 1px);
+  padding: 1px;
+  background: linear-gradient(135deg, hsla(var(--primary) / 0.3), transparent);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+/* Scrollbar */
+body {
+  overflow-y: scroll;
+}
+
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background-color: hsla(var(--muted) / 50%);
+  border-radius: 0;
+  border: transparent;
+}
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
