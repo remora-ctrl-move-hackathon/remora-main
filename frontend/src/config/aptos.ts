@@ -4,12 +4,31 @@ import { Aptos, AptosConfig, Network } from "@aptos-labs/ts-sdk";
 export const MODULE_ADDRESS = process.env.NEXT_PUBLIC_MODULE_ADDRESS || "0xCAFE";
 export const MODULE_NAME = "remora";
 
+// Network configuration
+const getNetwork = (): Network => {
+  const network = process.env.NEXT_PUBLIC_APTOS_NETWORK || "testnet";
+  switch (network.toLowerCase()) {
+    case "mainnet":
+      return Network.MAINNET;
+    case "testnet":
+      return Network.TESTNET;
+    case "devnet":
+      return Network.DEVNET;
+    default:
+      return Network.TESTNET;
+  }
+};
+
 // Initialize Aptos client
 const config = new AptosConfig({
-  network: Network.TESTNET,
+  network: getNetwork(),
 });
 
 export const aptos = new Aptos(config);
+
+// Feature flags
+export const TESTNET_MODE = process.env.NEXT_PUBLIC_ENABLE_TESTNET_MODE === "true";
+export const FAUCET_ENABLED = process.env.NEXT_PUBLIC_ENABLE_FAUCET === "true";
 
 // Contract function names
 export const CONTRACTS = {
