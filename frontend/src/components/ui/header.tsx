@@ -1,10 +1,8 @@
 "use client"
 
-import { Search, Bell, Wallet } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
+import { WalletButton } from "@/components/ui/wallet-button"
 
 export function Header() {
   const pathname = usePathname()
@@ -38,7 +36,7 @@ export function Header() {
                 href="/remit"
                 className={`text-sm font-light ${isActive("/remit") ? "text-primary font-normal" : "text-muted-foreground hover:text-foreground"} transition-all duration-200`}
               >
-                Payments
+                Off Ramp
               </Link>
               <Link 
                 href="/analytics"
@@ -54,22 +52,7 @@ export function Header() {
               </Link>
             </nav>
           </div>
-          <div className="flex items-center gap-4">
-            <div className="relative hidden md:block">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input 
-                placeholder="Search..."
-                className="pl-10 bg-background border-border/50 text-foreground placeholder:text-muted-foreground w-56 h-9 text-sm font-light focus:border-primary/50 focus:ring-1 focus:ring-primary/20"
-              />
-            </div>
-            <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-primary hover:bg-primary/5 h-9 w-9 transition-all duration-200">
-              <Bell className="h-4 w-4" />
-            </Button>
-            <Button className="bg-primary hover:bg-primary/90 text-white border-0 h-9 px-4 text-sm font-light transition-all duration-200 shadow-sm hover:shadow-md">
-              <Wallet className="h-4 w-4 mr-2" />
-              0xbf63...e6b7
-            </Button>
-          </div>
+          <WalletButton />
         </div>
       </div>
     </header>

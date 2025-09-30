@@ -1,5 +1,7 @@
 import '../styles/globals.css'
 import { fontClassNames } from '@/lib/fonts'
+import { WalletProvider } from '@/components/providers/WalletProvider'
+import { ErrorBoundary } from '@/components/providers/ErrorBoundary'
 
 export const metadata = {
   title: 'Remora - DeFi Super App',
@@ -13,7 +15,13 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={`${fontClassNames} min-h-screen flex flex-col antialiased`}>{children}</body>
+      <body className={`${fontClassNames} min-h-screen flex flex-col antialiased`}>
+        <ErrorBoundary>
+          <WalletProvider>
+            {children}
+          </WalletProvider>
+        </ErrorBoundary>
+      </body>
     </html>
   )
 }

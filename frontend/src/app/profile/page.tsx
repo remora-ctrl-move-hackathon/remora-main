@@ -1,6 +1,6 @@
 "use client"
 
-import { ArrowLeft, Edit, Settings, Shield, Bell, Wallet, History, TrendingUp, Send, Award } from "lucide-react"
+import { Settings, Shield, Bell, Wallet, History, TrendingUp, Send, Award } from "lucide-react"
 import { Header } from "@/components/ui/header"
 import { Footer } from "@/components/ui/footer"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -32,41 +32,34 @@ export default function Profile() {
   ]
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="min-h-screen bg-gradient-to-br from-white to-primary/5 flex flex-col">
       <Header />
-      <div className="max-w-screen-xl mx-auto px-8 py-12">
-        <div className="flex items-center gap-4 mb-12">
-          <Link href="/">
-            <Button variant="ghost" size="icon" className="hover:bg-primary/5 text-muted-foreground hover:text-primary transition-all duration-200">
-              <ArrowLeft className="h-5 w-5" />
-            </Button>
-          </Link>
-          <div>
-            <h1 className="text-2xl font-extralight text-foreground">Profile</h1>
-            <p className="text-sm font-light text-muted-foreground mt-1">Manage your account</p>
-          </div>
+      <div className="max-w-screen-xl mx-auto px-8 py-12 w-full">
+        <div className="mb-8">
+          <h1 className="text-2xl font-extralight text-foreground">Profile</h1>
+          <p className="text-sm font-light text-muted-foreground mt-1">Manage your account</p>
         </div>
 
         <Card className="mb-8 bg-white border-border/50 shadow-sm hover:shadow-md transition-all duration-300">
           <CardContent className="pt-8 pb-8">
             <div className="flex items-start justify-between mb-8">
               <div className="flex items-center gap-6">
-                <div className="w-20 h-20 rounded-full bg-gradient-to-br from-primary to-secondary text-white flex items-center justify-center text-2xl font-light">
-                  JD
+                <div className="w-20 h-20 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
+                  <img 
+                    src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTWzRh7Mpizqm0eqIVzNzrmMZlBH52NzItVwQ&s"
+                    alt="Aptos Logo"
+                    className="w-12 h-12 rounded-full"
+                  />
                 </div>
                 <div>
-                  <h2 className="text-2xl font-extralight mb-2 text-foreground">John Doe</h2>
-                  <p className="text-muted-foreground font-light mb-3">john.doe@example.com</p>
-                  <Badge className="bg-primary/10 text-primary border-primary/20 font-light">Premium Member</Badge>
+                  <h2 className="text-2xl font-mono font-extralight mb-2 text-foreground">0x742d...8f9a</h2>
+                  <p className="text-muted-foreground font-light mb-3">Connected via Aptos Wallet</p>
+                  <Badge className="bg-primary/10 text-primary border-primary/20 font-light">Active on Testnet</Badge>
                 </div>
               </div>
-              <Button variant="outline" size="sm" className="border-primary/50 text-primary hover:bg-primary/5 font-light transition-all duration-200">
-                <Edit className="h-4 w-4 mr-2" />
-                Edit Profile
-              </Button>
             </div>
 
-            <div className="grid grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
               {userStats.map((stat, index) => (
                 <div key={index} className="p-6 bg-gradient-to-br from-white to-primary/5 rounded-xl border border-border/30 hover:shadow-md transition-all duration-300">
                   <div className="flex items-center gap-3 mb-3">

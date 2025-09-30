@@ -243,20 +243,19 @@ export default function Home() {
             <div className="space-y-3">
               {/* Table Header */}
               <div className="grid grid-cols-12 gap-4 px-6 py-4 text-xs text-gray-400 uppercase tracking-wider font-light">
-                <div className="col-span-3">Recipient</div>
-                <div className="col-span-2 text-right">Amount</div>
+                <div className="col-span-4">Recipient</div>
+                <div className="col-span-3 text-right">Amount</div>
                 <div className="col-span-2 text-right">Rate</div>
                 <div className="col-span-2 text-center">Progress</div>
-                <div className="col-span-2 text-right">APY</div>
-                <div className="col-span-1"></div>
+                <div className="col-span-1 text-right">APY</div>
               </div>
 
               {/* Table Rows */}
               {streams.map((stream) => (
-                <Link href="/streams" key={stream.id}>
+                <Link href={`/streams/${stream.id}`} key={stream.id}>
                   <Card className="bg-white border-gray-100 hover:border-primary/30 hover:shadow-lg transition-all cursor-pointer p-6 mb-3">
                     <div className="grid grid-cols-12 gap-4 items-center">
-                      <div className="col-span-3 flex items-center gap-4">
+                      <div className="col-span-4 flex items-center gap-4">
                         <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/5 to-primary/10 flex items-center justify-center">
                           <stream.icon className="h-5 w-5 text-primary" strokeWidth={1.5} />
                         </div>
@@ -266,7 +265,7 @@ export default function Home() {
                         </div>
                       </div>
                       
-                      <div className="col-span-2 text-right">
+                      <div className="col-span-3 text-right">
                         <p className="text-sm font-light text-gray-900">{stream.amount} {stream.currency}</p>
                         <p className="text-xs text-gray-400 font-light">{stream.value}</p>
                       </div>
@@ -287,22 +286,15 @@ export default function Home() {
                         </div>
                       </div>
                       
-                      <div className="col-span-2 text-right">
+                      <div className="col-span-1 text-right">
                         <div className="flex items-center justify-end gap-1">
                           <TrendingUp className="h-3 w-3 text-primary" strokeWidth={1.5} />
                           <span className="text-sm font-light text-primary">{stream.apy}</span>
                         </div>
-                      </div>
-                      
-                      <div className="col-span-1 text-right">
                         {stream.status === "active" ? (
-                          <Badge className="bg-primary/10 text-primary border-0 text-xs font-light">
-                            Active
-                          </Badge>
+                          <div className="text-xs text-green-600 mt-1">Active</div>
                         ) : (
-                          <Badge className="bg-gray-100 text-gray-400 border-0 text-xs font-light">
-                            Paused
-                          </Badge>
+                          <div className="text-xs text-gray-400 mt-1">Paused</div>
                         )}
                       </div>
                     </div>

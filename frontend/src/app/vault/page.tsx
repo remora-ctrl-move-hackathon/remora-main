@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { Header } from "@/components/ui/header"
 import { Footer } from "@/components/ui/footer"
-import { ArrowLeft, TrendingUp, Users, Award, ArrowUpRight, DollarSign, Target } from "lucide-react"
+import { TrendingUp, Users, Award, ArrowUpRight, DollarSign, Target } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -19,8 +19,7 @@ export default function Vault() {
   const topTraders = [
     { 
       id: 1, 
-      name: "CryptoWhale", 
-      avatar: "CW", 
+      name: "0x742d...8f9a", 
       pnl: "+45.2%", 
       return7d: "+12.3%", 
       return30d: "+45.2%", 
@@ -29,8 +28,7 @@ export default function Vault() {
     },
     { 
       id: 2, 
-      name: "DeFiMaster", 
-      avatar: "DM", 
+      name: "0x9fc1...3e2d", 
       pnl: "+38.5%", 
       return7d: "+8.5%", 
       return30d: "+38.5%", 
@@ -39,8 +37,7 @@ export default function Vault() {
     },
     { 
       id: 3, 
-      name: "MoonTrader", 
-      avatar: "MT", 
+      name: "0x1a3b...7c5e", 
       pnl: "+62.1%", 
       return7d: "+18.4%", 
       return30d: "+62.1%", 
@@ -50,9 +47,9 @@ export default function Vault() {
   ]
 
   const myVaults = [
-    { id: 1, trader: "CryptoWhale", invested: 1000, current: 1234, pnl: "+23.4%", allocation: "45%" },
-    { id: 2, trader: "DeFiMaster", invested: 500, current: 585, pnl: "+17.0%", allocation: "25%" },
-    { id: 3, trader: "MoonTrader", invested: 750, current: 912, pnl: "+21.6%", allocation: "30%" },
+    { id: 1, trader: "0x742d...8f9a", invested: 1000, current: 1234, pnl: "+23.4%", allocation: "45%" },
+    { id: 2, trader: "0x9fc1...3e2d", invested: 500, current: 585, pnl: "+17.0%", allocation: "25%" },
+    { id: 3, trader: "0x1a3b...7c5e", invested: 750, current: 912, pnl: "+21.6%", allocation: "30%" },
   ]
 
 
@@ -60,16 +57,9 @@ export default function Vault() {
     <div className="min-h-screen bg-gradient-to-br from-white to-primary/5">
       <Header />
       <div className="max-w-screen-xl mx-auto px-8 py-12">
-        <div className="flex items-center gap-3 mb-8">
-          <Link href="/">
-            <Button variant="ghost" size="icon" className="hover:bg-primary/10 transition-all duration-300">
-              <ArrowLeft className="h-5 w-5 text-primary/70" />
-            </Button>
-          </Link>
-          <div>
-            <h1 className="text-2xl font-extralight text-gray-900">Copy Trading Vaults</h1>
-            <p className="text-sm text-gray-500 font-light">Follow top traders automatically</p>
-          </div>
+        <div className="mb-8">
+          <h1 className="text-2xl font-extralight text-gray-900">Copy Trading Vaults</h1>
+          <p className="text-sm text-gray-500 font-light">Follow top traders automatically</p>
         </div>
 
         <Card className="mb-8 bg-white border-border/50 shadow-sm rounded-xl hover:shadow-md transition-all duration-300">
@@ -106,18 +96,8 @@ export default function Vault() {
                 <CardContent className="pt-6 pb-6">
                   <div className="flex items-start justify-between mb-6">
                     <div className="flex items-center gap-4">
-                      <div className="relative">
-                        <div className="w-14 h-14 rounded-full bg-primary text-white flex items-center justify-center font-light text-lg">
-                          {trader.avatar}
-                        </div>
-                        {index === 0 && (
-                          <div className="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-gold flex items-center justify-center">
-                            <Award className="h-3 w-3 text-white" />
-                          </div>
-                        )}
-                      </div>
                       <div>
-                        <div className="font-light text-lg text-foreground">{trader.name}</div>
+                        <div className="font-light text-lg text-foreground font-mono">{trader.name}</div>
                         <div className="flex items-center gap-2 text-sm font-light text-muted-foreground">
                           <Users className="h-3 w-3" />
                           {trader.followers.toLocaleString()} followers

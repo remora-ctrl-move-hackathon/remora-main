@@ -1,203 +1,340 @@
 "use client"
 
-import { ArrowLeft, TrendingUp, Users, Activity, Calendar, BarChart3, ArrowUpRight, ArrowDownRight, Zap, Send, Receipt, DollarSign } from "lucide-react"
+import { TrendingUp, Activity, ArrowUpRight, ArrowDownRight, Zap, Receipt, Wallet, Globe, Shield, PieChart, CircleDollarSign, Layers } from "lucide-react"
 import { Header } from "@/components/ui/header"
-import { Footer } from "@/components/ui/footer"
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Badge } from "@/components/ui/badge"
 import Link from "next/link"
 
 export default function Analytics() {
   const stats = [
-    { label: "Total Balance", value: "$12,459.83", change: "+12.3%", trend: "up", icon: DollarSign },
-    { label: "Monthly Income", value: "$5,234.50", change: "+18.2%", trend: "up", icon: TrendingUp },
-    { label: "Active Streams", value: "8", change: "+2", trend: "up", icon: Zap },
-    { label: "Vault ROI", value: "+21.4%", change: "+3.1%", trend: "up", icon: BarChart3 },
+    { 
+      label: "Portfolio Value", 
+      value: "$892,459", 
+      change: "+12.3%", 
+      trend: "up", 
+      icon: Wallet,
+      subValue: "86.4M APT"
+    },
+    { 
+      label: "Streaming Income", 
+      value: "$5,234/mo", 
+      change: "+18.2%", 
+      trend: "up", 
+      icon: Zap,
+      subValue: "8 active"
+    },
+    { 
+      label: "Vault Returns", 
+      value: "+21.4%", 
+      change: "+3.1%", 
+      trend: "up", 
+      icon: TrendingUp,
+      subValue: "3 positions"
+    },
+    { 
+      label: "Total Volume", 
+      value: "$12.4M", 
+      change: "+45.8%", 
+      trend: "up", 
+      icon: Activity,
+      subValue: "This epoch"
+    },
   ]
 
-  const transactions = [
-    { id: 1, type: "Vault Profit", amount: 125.50, category: "Investment", date: "Jan 22", trend: "up" },
-    { id: 2, type: "Remittance Sent", amount: -200.00, category: "Transfer", date: "Jan 21", trend: "down" },
-    { id: 3, type: "Stream Payment", amount: 500.00, category: "Income", date: "Jan 20", trend: "up" },
-    { id: 4, type: "Bill Payment", amount: -45.50, category: "Bills", date: "Jan 19", trend: "down" },
-    { id: 5, type: "Vault Deposit", amount: -1000.00, category: "Investment", date: "Jan 18", trend: "down" },
+  const protocolMetrics = {
+    tvl: "$892M",
+    volume24h: "$124M",
+    totalStreams: "1,248",
+    activeUsers: "8,429",
+    avgAPY: "12.8%",
+    protocolRevenue: "$2.4M"
+  }
+
+  const recentActivity = [
+    { 
+      id: 1, 
+      type: "Stream Created", 
+      details: "Team Payroll • $3,500/mo",
+      time: "2 min ago",
+      status: "success",
+      txn: "0x742d...8f9a"
+    },
+    { 
+      id: 2, 
+      type: "Vault Harvest", 
+      details: "Alpha Strategy • +125.5 APT",
+      time: "15 min ago",
+      status: "success",
+      txn: "0x9fc1...3e2d"
+    },
+    { 
+      id: 3, 
+      type: "Remittance Sent", 
+      details: "US → Nigeria • 200 USDC",
+      time: "1 hour ago",
+      status: "success",
+      txn: "0x1a3b...7c5e"
+    },
+    { 
+      id: 4, 
+      type: "Liquidity Added", 
+      details: "APT/USDC Pool • $1,000",
+      time: "2 hours ago",
+      status: "pending",
+      txn: "0x8df2...1b4c"
+    },
   ]
 
-  const categorySpending = [
-    { category: "Investment", amount: 3500, percentage: 45, color: "bg-black" },
-    { category: "Transfer", amount: 2400, percentage: 31, color: "bg-gray-600" },
-    { category: "Bills", amount: 1200, percentage: 15, color: "bg-gray-400" },
-    { category: "Income", amount: 700, percentage: 9, color: "bg-gray-300" },
+  const portfolioBreakdown = [
+    { asset: "Streams", value: 45234, percentage: 45, color: "from-primary to-primary/70" },
+    { asset: "Vaults", value: 32100, percentage: 32, color: "from-green-500 to-green-400" },
+    { asset: "Liquidity", value: 15600, percentage: 15, color: "from-blue-500 to-blue-400" },
+    { asset: "Staking", value: 8066, percentage: 8, color: "from-purple-500 to-purple-400" },
   ]
 
-  const upcomingPayments = [
-    { title: "Electricity Bill", amount: 45.50, date: "Jan 25", category: "Bills" },
-    { title: "Vault Investment", amount: 500.00, date: "Jan 27", category: "Investment" },
-    { title: "Stream to Team", amount: 1200.00, date: "Jan 28", category: "Transfer" },
+  const yieldSources = [
+    { source: "Streaming APY", apy: "3.36%", value: "$186/mo", icon: Zap },
+    { source: "Vault Returns", apy: "21.4%", value: "$573/mo", icon: TrendingUp },
+    { source: "LP Rewards", apy: "45.2%", value: "$892/mo", icon: Layers },
+    { source: "Staking Rewards", apy: "8.7%", value: "$70/mo", icon: Shield },
   ]
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="min-h-screen bg-gradient-to-br from-white to-primary/5">
       <Header />
       <div className="max-w-screen-xl mx-auto px-8 py-12">
-        <div className="flex items-center gap-4 mb-12">
-          <Link href="/">
-            <Button variant="ghost" size="icon" className="hover:bg-primary/5 text-muted-foreground hover:text-primary transition-all duration-200">
-              <ArrowLeft className="h-5 w-5" />
-            </Button>
-          </Link>
+        {/* Header */}
+        <div className="flex items-center justify-between mb-10">
           <div>
-            <h1 className="text-2xl font-extralight text-foreground">Analytics Dashboard</h1>
-            <p className="text-sm font-light text-muted-foreground mt-1">Financial insights & metrics</p>
+            <h1 className="text-3xl font-extralight text-gray-900">Analytics</h1>
+            <p className="text-sm text-gray-500 font-light mt-1">Protocol metrics & portfolio insights</p>
           </div>
+          <Badge variant="outline" className="text-xs border-primary/20 text-primary font-light">
+            <div className="w-2 h-2 rounded-full bg-primary animate-pulse mr-2" />
+            Live on Testnet
+          </Badge>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        {/* Key Metrics */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-10">
           {stats.map((stat, index) => (
-            <Card key={index} className="bg-white border-border/50 shadow-sm hover:shadow-md transition-all duration-300">
+            <Card key={index} className="bg-white/80 backdrop-blur-sm border-border/50 shadow-sm hover:shadow-lg transition-all duration-300 group">
               <CardContent className="pt-6 pb-6">
-                <div className="flex items-center justify-between mb-4">
-                  <span className="text-sm font-light text-muted-foreground">{stat.label}</span>
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
-                    <stat.icon className="h-5 w-5 text-white" />
+                <div className="flex items-start justify-between mb-4">
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center group-hover:scale-110 transition-transform">
+                    <stat.icon className="h-6 w-6 text-primary" strokeWidth={1.5} />
+                  </div>
+                  <div className={`flex items-center gap-1 text-xs font-light ${stat.trend === "up" ? "text-green-600" : "text-red-600"}`}>
+                    {stat.trend === "up" ? (
+                      <ArrowUpRight className="h-3 w-3" />
+                    ) : (
+                      <ArrowDownRight className="h-3 w-3" />
+                    )}
+                    {stat.change}
                   </div>
                 </div>
-                <div className="text-2xl font-extralight mb-3">{stat.value}</div>
-                <div className="flex items-center gap-1 text-sm font-light">
-                  {stat.trend === "up" ? (
-                    <ArrowUpRight className="h-4 w-4 text-success" />
-                  ) : (
-                    <ArrowDownRight className="h-4 w-4 text-destructive" />
-                  )}
-                  <span className={stat.trend === "up" ? "text-success" : "text-destructive"}>
-                    {stat.change}
-                  </span>
-                  <span className="text-muted-foreground">vs last month</span>
+                <div>
+                  <p className="text-xs text-gray-400 mb-1 uppercase tracking-wider font-light">{stat.label}</p>
+                  <p className="text-2xl font-extralight text-gray-900">{stat.value}</p>
+                  <p className="text-xs text-gray-500 font-light mt-1">{stat.subValue}</p>
                 </div>
               </CardContent>
             </Card>
           ))}
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <Card className="md:col-span-2 bg-white border-border/50 shadow-sm">
-            <CardHeader>
-              <CardTitle className="font-light text-xl">Transaction History</CardTitle>
-              <CardDescription className="font-light">Recent financial activities</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {transactions.map((transaction) => (
-                  <div key={transaction.id} className="flex items-center justify-between p-4 border border-border/30 rounded-xl hover:border-primary/30 hover:shadow-sm transition-all duration-200">
-                    <div className="flex items-center gap-4">
-                      <div className="w-10 h-10 rounded-full flex items-center justify-center bg-gradient-to-br from-primary/10 to-primary/5">
-                        {transaction.trend === "up" ? (
-                          <ArrowUpRight className="h-5 w-5 text-success" />
-                        ) : (
-                          <ArrowDownRight className="h-5 w-5 text-destructive" />
-                        )}
-                      </div>
-                      <div>
-                        <div className="font-medium">{transaction.type}</div>
-                        <div className="text-sm text-muted-foreground">{transaction.category} • {transaction.date}</div>
-                      </div>
-                    </div>
-                    <div className="font-semibold text-foreground">
-                      {transaction.amount > 0 ? "+" : ""}${Math.abs(transaction.amount).toFixed(2)}
-                    </div>
-                  </div>
-                ))}
+        {/* Protocol Overview */}
+        <Card className="bg-gradient-to-r from-primary to-primary/90 text-white mb-10 border-0 shadow-lg">
+          <CardContent className="pt-8 pb-8">
+            <h3 className="text-lg font-light mb-6 opacity-90">Protocol Overview</h3>
+            <div className="grid grid-cols-2 md:grid-cols-6 gap-6">
+              <div>
+                <p className="text-xs opacity-70 mb-1">TVL</p>
+                <p className="text-2xl font-extralight">{protocolMetrics.tvl}</p>
               </div>
-            </CardContent>
-          </Card>
+              <div>
+                <p className="text-xs opacity-70 mb-1">24h Volume</p>
+                <p className="text-2xl font-extralight">{protocolMetrics.volume24h}</p>
+              </div>
+              <div>
+                <p className="text-xs opacity-70 mb-1">Active Streams</p>
+                <p className="text-2xl font-extralight">{protocolMetrics.totalStreams}</p>
+              </div>
+              <div>
+                <p className="text-xs opacity-70 mb-1">Users</p>
+                <p className="text-2xl font-extralight">{protocolMetrics.activeUsers}</p>
+              </div>
+              <div>
+                <p className="text-xs opacity-70 mb-1">Avg APY</p>
+                <p className="text-2xl font-extralight">{protocolMetrics.avgAPY}</p>
+              </div>
+              <div>
+                <p className="text-xs opacity-70 mb-1">Revenue</p>
+                <p className="text-2xl font-extralight">{protocolMetrics.protocolRevenue}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
 
-          <Card className="backdrop-blur-xl bg-card border-border">
-            <CardHeader>
-              <CardTitle>Spending by Category</CardTitle>
-              <CardDescription>This month</CardDescription>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-10">
+          {/* Portfolio Breakdown */}
+          <Card className="bg-white border-border/50 shadow-sm">
+            <CardHeader className="pb-4">
+              <CardTitle className="font-light text-xl flex items-center gap-2">
+                <PieChart className="h-5 w-5 text-primary" />
+                Portfolio Breakdown
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {categorySpending.map((item, index) => (
+                {portfolioBreakdown.map((item, index) => (
                   <div key={index}>
                     <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm font-medium">{item.category}</span>
-                      <span className="text-sm text-muted-foreground">${item.amount.toLocaleString()}</span>
+                      <span className="text-sm font-light text-gray-600">{item.asset}</span>
+                      <span className="text-sm font-mono">${item.value.toLocaleString()}</span>
                     </div>
-                    <div className="w-full bg-accent rounded-full h-2">
+                    <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
                       <div 
-                        className={`${item.color} h-2 rounded-full`}
+                        className={`h-full bg-gradient-to-r ${item.color} transition-all duration-500`}
                         style={{ width: `${item.percentage}%` }}
                       />
                     </div>
-                    <div className="text-xs text-muted-foreground mt-1">{item.percentage}%</div>
+                    <div className="text-xs text-gray-400 font-light mt-1">{item.percentage}% of portfolio</div>
                   </div>
                 ))}
               </div>
+              <div className="mt-6 pt-6 border-t border-border/30">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-500 font-light">Total Value</span>
+                  <span className="text-xl font-light">$101,000</span>
+                </div>
+              </div>
             </CardContent>
           </Card>
-        </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <Card className="backdrop-blur-xl bg-card border-border">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Calendar className="h-5 w-5" />
-                Upcoming Payments
+          {/* Yield Sources */}
+          <Card className="bg-white border-border/50 shadow-sm">
+            <CardHeader className="pb-4">
+              <CardTitle className="font-light text-xl flex items-center gap-2">
+                <CircleDollarSign className="h-5 w-5 text-primary" />
+                Yield Sources
               </CardTitle>
-              <CardDescription>Scheduled transactions</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {yieldSources.map((source, index) => (
+                <div key={index} className="p-4 bg-gradient-to-r from-gray-50 to-white rounded-xl border border-border/30 hover:border-primary/30 transition-all">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center">
+                        <source.icon className="h-5 w-5 text-primary" strokeWidth={1.5} />
+                      </div>
+                      <div>
+                        <p className="text-sm font-normal text-gray-900">{source.source}</p>
+                        <p className="text-xs text-gray-500 font-light">{source.value}</p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-lg font-light text-green-600">{source.apy}</p>
+                      <p className="text-xs text-gray-400 font-light">APY</p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+              <div className="mt-4 p-4 bg-gradient-to-br from-primary/5 to-primary/10 rounded-xl">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm font-light">Total Monthly Yield</span>
+                  <span className="text-xl font-light text-primary">$1,721</span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Recent Activity */}
+          <Card className="bg-white border-border/50 shadow-sm">
+            <CardHeader className="pb-4">
+              <CardTitle className="font-light text-xl flex items-center gap-2">
+                <Activity className="h-5 w-5 text-primary" />
+                Recent Activity
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                {upcomingPayments.map((payment, index) => (
-                  <div key={index} className="flex items-center justify-between p-3 bg-accent rounded-lg">
-                    <div>
-                      <div className="font-medium">{payment.title}</div>
-                      <div className="text-sm text-muted-foreground">{payment.category} • {payment.date}</div>
+                {recentActivity.map((activity) => (
+                  <div key={activity.id} className="p-3 rounded-xl border border-border/30 hover:border-primary/30 transition-all">
+                    <div className="flex items-start justify-between mb-2">
+                      <div>
+                        <p className="text-sm font-normal text-gray-900">{activity.type}</p>
+                        <p className="text-xs text-gray-500 font-light">{activity.details}</p>
+                      </div>
+                      <Badge className={`text-xs font-light ${
+                        activity.status === 'success' ? 'bg-green-50 text-green-600' : 'bg-yellow-50 text-yellow-600'
+                      } border-0`}>
+                        {activity.status}
+                      </Badge>
                     </div>
-                    <div className="font-semibold">${payment.amount.toFixed(2)}</div>
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-gray-400 font-light">{activity.time}</span>
+                      <span className="font-mono text-gray-500">{activity.txn}</span>
+                    </div>
                   </div>
                 ))}
               </div>
-            </CardContent>
-          </Card>
-
-          <Card className="backdrop-blur-xl bg-black/90 border-gray-800 text-white">
-            <CardHeader>
-              <CardTitle>Quick Actions</CardTitle>
-              <CardDescription className="text-muted-foreground">Manage your finances</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <Link href="/streams">
-                <Button className="w-full bg-white text-foreground hover:bg-accent justify-start">
-                  <Zap className="h-4 w-4 mr-2" />
-                  Create Stream
-                </Button>
-              </Link>
-              <Link href="/remit">
-                <Button className="w-full bg-white text-foreground hover:bg-accent justify-start">
-                  <Send className="h-4 w-4 mr-2" />
-                  Send Money
-                </Button>
-              </Link>
-              <Link href="/dashboard">
-                <Button className="w-full bg-white text-foreground hover:bg-accent justify-start">
-                  <Receipt className="h-4 w-4 mr-2" />
-                  Pay Bills
-                </Button>
-              </Link>
-              <Link href="/vault">
-                <Button className="w-full bg-white text-foreground hover:bg-accent justify-start">
-                  <TrendingUp className="h-4 w-4 mr-2" />
-                  Invest in Vaults
+              <Link href="/transactions">
+                <Button variant="ghost" className="w-full mt-4 text-primary hover:bg-primary/5 font-light">
+                  View All Transactions
+                  <ArrowUpRight className="h-4 w-4 ml-2" />
                 </Button>
               </Link>
             </CardContent>
           </Card>
         </div>
-      </div>
 
+        {/* Quick Actions */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <Link href="/streams">
+            <Card className="bg-white border-border/50 hover:border-primary/50 hover:shadow-lg transition-all cursor-pointer group">
+              <CardContent className="pt-6 pb-6 text-center">
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform">
+                  <Zap className="h-6 w-6 text-primary" strokeWidth={1.5} />
+                </div>
+                <p className="text-sm font-light text-gray-900">Create Stream</p>
+              </CardContent>
+            </Card>
+          </Link>
+          <Link href="/vault">
+            <Card className="bg-white border-border/50 hover:border-primary/50 hover:shadow-lg transition-all cursor-pointer group">
+              <CardContent className="pt-6 pb-6 text-center">
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform">
+                  <TrendingUp className="h-6 w-6 text-primary" strokeWidth={1.5} />
+                </div>
+                <p className="text-sm font-light text-gray-900">Manage Vaults</p>
+              </CardContent>
+            </Card>
+          </Link>
+          <Link href="/remit">
+            <Card className="bg-white border-border/50 hover:border-primary/50 hover:shadow-lg transition-all cursor-pointer group">
+              <CardContent className="pt-6 pb-6 text-center">
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform">
+                  <Globe className="h-6 w-6 text-primary" strokeWidth={1.5} />
+                </div>
+                <p className="text-sm font-light text-gray-900">Send Remittance</p>
+              </CardContent>
+            </Card>
+          </Link>
+          <Link href="/payments">
+            <Card className="bg-white border-border/50 hover:border-primary/50 hover:shadow-lg transition-all cursor-pointer group">
+              <CardContent className="pt-6 pb-6 text-center">
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform">
+                  <Receipt className="h-6 w-6 text-primary" strokeWidth={1.5} />
+                </div>
+                <p className="text-sm font-light text-gray-900">Pay Bills</p>
+              </CardContent>
+            </Card>
+          </Link>
+        </div>
+      </div>
     </div>
   )
 }
