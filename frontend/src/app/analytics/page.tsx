@@ -1,6 +1,6 @@
 "use client"
 
-import { TrendingUp, Activity, ArrowUpRight, ArrowDownRight, Zap, Receipt, Wallet, Globe, Shield, PieChart, CircleDollarSign, Layers } from "lucide-react"
+import { TrendingUp, Activity, ArrowUpRight, ArrowDownRight, Zap, Wallet, Shield, PieChart, CircleDollarSign, Layers } from "lucide-react"
 import { Header } from "@/components/ui/header"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -292,7 +292,7 @@ export default function Analytics() {
         </div>
 
         {/* Quick Actions */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 gap-4">
           <Link href="/streams">
             <Card className="bg-white border-border/50 hover:border-primary/50 hover:shadow-lg transition-all cursor-pointer group">
               <CardContent className="pt-6 pb-6 text-center">
@@ -310,26 +310,6 @@ export default function Analytics() {
                   <TrendingUp className="h-6 w-6 text-primary" strokeWidth={1.5} />
                 </div>
                 <p className="text-sm font-light text-gray-900">Manage Vaults</p>
-              </CardContent>
-            </Card>
-          </Link>
-          <Link href="/remit">
-            <Card className="bg-white border-border/50 hover:border-primary/50 hover:shadow-lg transition-all cursor-pointer group">
-              <CardContent className="pt-6 pb-6 text-center">
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform">
-                  <Globe className="h-6 w-6 text-primary" strokeWidth={1.5} />
-                </div>
-                <p className="text-sm font-light text-gray-900">Send Remittance</p>
-              </CardContent>
-            </Card>
-          </Link>
-          <Link href="/payments">
-            <Card className="bg-white border-border/50 hover:border-primary/50 hover:shadow-lg transition-all cursor-pointer group">
-              <CardContent className="pt-6 pb-6 text-center">
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform">
-                  <Receipt className="h-6 w-6 text-primary" strokeWidth={1.5} />
-                </div>
-                <p className="text-sm font-light text-gray-900">Pay Bills</p>
               </CardContent>
             </Card>
           </Link>

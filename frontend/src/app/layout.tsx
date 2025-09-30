@@ -2,6 +2,7 @@ import '../styles/globals.css'
 import { fontClassNames } from '@/lib/fonts'
 import { WalletProvider } from '@/components/providers/WalletProvider'
 import { ErrorBoundary } from '@/components/providers/ErrorBoundary'
+import { Toaster } from 'react-hot-toast'
 
 export const metadata = {
   title: 'Remora - DeFi Super App',
@@ -19,6 +20,7 @@ export default function RootLayout({
         <ErrorBoundary>
           <WalletProvider>
             {children}
+            <Toaster position="top-right" />
           </WalletProvider>
         </ErrorBoundary>
       </body>

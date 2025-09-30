@@ -33,6 +33,7 @@
     "petra-plugin-wallet-adapter": "^0.4.5",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
+    "react-hot-toast": "^2.6.0",
     "tailwind-merge": "^2.5.4",
     "tailwindcss-animate": "^1.0.7"
   },

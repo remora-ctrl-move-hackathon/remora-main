@@ -44,12 +44,6 @@ export function Header() {
               >
                 Analytics
               </Link>
-              <Link 
-                href="/profile"
-                className={`text-sm font-light ${isActive("/profile") ? "text-primary font-normal" : "text-muted-foreground hover:text-foreground"} transition-all duration-200`}
-              >
-                Profile
-              </Link>
             </nav>
           </div>
           <WalletButton />

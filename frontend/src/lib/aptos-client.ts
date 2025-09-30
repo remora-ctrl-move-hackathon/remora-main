@@ -1,0 +1,168 @@
+import { 
+  aptos, 
+  MODULE_ADDRESS,
+  parseAptAmount 
+} from "@/config/aptos";
+import type { 
+  InputGenerateTransactionPayloadData
+} from "@aptos-labs/ts-sdk";
+
+/**
+ * AptosClient - Main client for interacting with Remora smart contracts
+ */
+export class AptosClient {
+  /**
+   * Get account balance in APT
+   */
+  async getBalance(address: string): Promise<number> {
+    try {
+      const resources = await aptos.getAccountResources({
+        accountAddress: address,
+      });
+      
+      const accountResource = resources.find(
+        (r) => r.type === "0x1::coin::CoinStore<0x1::aptos_coin::AptosCoin>"
+      );
+      
+      if (!accountResource) return 0;
+      
+      const balance = (accountResource.data as any).coin.value;
+      return parseAptAmount(balance);
+    } catch (error) {
+      console.error("Error fetching balance:", error);
+      return 0;
+    }
+  }
+
+  /**
+   * View function caller - for read-only operations
+   */
+  async viewFunction(payload: {
+    function: `${string}::${string}::${string}`;
+    typeArguments?: string[];
+    functionArguments: any[];
+  }): Promise<any> {
+    try {
+      const result = await aptos.view({
+        payload: {
+          function: payload.function,
+          typeArguments: payload.typeArguments || [],
+          functionArguments: payload.functionArguments,
+        },
+      });
+      return result[0];
+    } catch (error) {
+      console.error("Error calling view function:", error);
+      throw error;
+    }
+  }
+
+  /**
+   * Build transaction for signing
+   */
+  async buildTransaction(payload: {
+    function: `${string}::${string}::${string}`;
+    typeArguments?: string[];
+    functionArguments: any[];
+  }): Promise<InputGenerateTransactionPayloadData> {
+    return {
+      function: payload.function,
+      typeArguments: payload.typeArguments || [],
+      functionArguments: payload.functionArguments,
+    };
+  }
+
+  /**
+   * Submit signed transaction
+   */
+  async submitTransaction(signedTxn: any): Promise<string> {
+    try {
+      const pendingTxn = await aptos.transaction.submit.simple({
+        transaction: signedTxn,
+        senderAuthenticator: signedTxn.senderAuthenticator,
+      });
+      
+      // Wait for transaction
+      await aptos.waitForTransaction({
+        transactionHash: pendingTxn.hash,
+      });
+      
+      return pendingTxn.hash;
+    } catch (error) {
+      console.error("Error submitting transaction:", error);
+      throw error;
+    }
+  }
+
+  /**
+   * Check if module is initialized for address
+   */
+  async isModuleInitialized(
+    moduleOwner: string,
+    moduleName: "streaming" | "vault" | "offramp"
+  ): Promise<boolean> {
+    try {
+      const resources = await aptos.getAccountResources({
+        accountAddress: moduleOwner,
+      });
+      
+      const resourceType = `${MODULE_ADDRESS}::${moduleName}::${
+        moduleName === "streaming" ? "StreamStore" :
+        moduleName === "vault" ? "VaultStore" :
+        "OffRampStore"
+      }`;
+      
+      return resources.some((r) => r.type === resourceType);
+    } catch (error) {
+      console.error("Error checking module initialization:", error);
+      return false;
+    }
+  }
+
+  /**
+   * Get transaction by hash
+   */
+  async getTransaction(txnHash: string): Promise<any> {
+    try {
+      return await aptos.getTransactionByHash({ transactionHash: txnHash });
+    } catch (error) {
+      console.error("Error fetching transaction:", error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get account transactions
+   */
+  async getAccountTransactions(
+    address: string,
+    limit: number = 10
+  ): Promise<any[]> {
+    try {
+      return await aptos.getAccountTransactions({
+        accountAddress: address,
+        options: { limit },
+      });
+    } catch (error) {
+      console.error("Error fetching account transactions:", error);
+      return [];
+    }
+  }
+
+  /**
+   * Estimate gas for transaction
+   */
+  async estimateGas(_payload: InputGenerateTransactionPayloadData): Promise<number> {
+    try {
+      // For now, return a default gas estimate
+      // Actual simulation requires a valid account
+      return 100000;
+    } catch (error) {
+      console.error("Error estimating gas:", error);
+      return 100000; // Default gas estimate
+    }
+  }
+}
+
+// Export singleton instance
+export const aptosClient = new AptosClient();
