@@ -5,7 +5,7 @@ import { Header } from "@/components/ui/header"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { ArrowLeft, TrendingUp, Building2, Users, Box, Building, ChartBar, Pause, Play, Wallet } from "lucide-react"
+import { ArrowLeft, TrendingUp, Building2, Users, Box, Building, BarChart3, Pause, Play, Wallet } from "lucide-react"
 import Link from "next/link"
 import { useParams } from 'next/navigation'
 
@@ -94,7 +94,7 @@ const streamsData = [
   { 
     id: 5,
     recipient: "Marketing Fund",
-    icon: ChartBar,
+    icon: BarChart3,
     amount: "7.32M",
     currency: "AUSD",
     value: "$7.32M",

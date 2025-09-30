@@ -62,6 +62,13 @@ export class OffRampService {
   private moduleOwner: string = MODULE_ADDRESS;
 
   /**
+   * Get module owner address
+   */
+  getModuleOwner(): string {
+    return this.moduleOwner;
+  }
+
+  /**
    * Initialize the off-ramp module (admin only)
    */
   async initialize(): Promise<InputGenerateTransactionPayloadData> {
@@ -189,7 +196,7 @@ export class OffRampService {
     try {
       const result = await aptosClient.viewFunction({
         function: `${CONTRACTS.OFFRAMP.MODULE}::${CONTRACTS.OFFRAMP.VIEWS.GET_REQUEST_INFO}` as `${string}::${string}::${string}`,
-        functionArguments: [requestId, this.moduleOwner],
+        functionArguments: [requestId.toString(), this.moduleOwner],
       });
 
       if (!result) return null;
@@ -252,9 +259,17 @@ export class OffRampService {
       });
 
       return Number(result) / 1000000; // Convert from 6 decimal precision
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error fetching exchange rate:", error);
-      return 0;
+      // Return default exchange rates if not set
+      const defaultRates: Record<string, number> = {
+        "USD": 1.0,
+        "NGN": 1550.0,
+        "KES": 150.0,
+        "GHS": 15.0,
+        "ZAR": 18.5,
+      };
+      return defaultRates[currency] || 1.0;
     }
   }
 

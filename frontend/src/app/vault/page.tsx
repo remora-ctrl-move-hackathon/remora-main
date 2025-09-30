@@ -1,20 +1,129 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Header } from "@/components/ui/header"
 import { Footer } from "@/components/ui/footer"
-import { TrendingUp, Users, Award, ArrowUpRight, DollarSign, Target } from "lucide-react"
+import { TrendingUp, TrendingDown, Plus, Users, Lock, Unlock, Play, Pause, DollarSign, Loader2, Info, Copy, Award, ArrowUpRight, Target } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
+import { Progress } from "@/components/ui/progress"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { useWallet } from "@aptos-labs/wallet-adapter-react"
+import { useVault } from "@/hooks/useVault"
+import { parseAptAmount, formatAptAmount, VAULT_STATUS } from "@/config/aptos"
+import toast from "react-hot-toast"
 import Link from "next/link"
 
 export default function Vault() {
-  const [open, setOpen] = useState(false)
-  const [amount, setAmount] = useState("1000")
+  const [createOpen, setCreateOpen] = useState(false)
+  const [depositOpen, setDepositOpen] = useState(false)
+  const [selectedVault, setSelectedVault] = useState<any>(null)
+  const [isCreating, setIsCreating] = useState(false)
+  const [isDepositing, setIsDepositing] = useState(false)
+  const [activeTab, setActiveTab] = useState("explore")
+  const [amount, setAmount] = useState("100")
+  
+  const { connected, account } = useWallet()
+  const {
+    loading,
+    userVaults,
+    managedVaults,
+    totalValueLocked,
+    createVault,
+    depositToVault,
+    withdrawFromVault,
+    pauseVault,
+    resumeVault,
+    fetchUserVaults,
+  } = useVault()
+
+  // Form states for creating vault
+  const [vaultForm, setVaultForm] = useState({
+    name: "",
+    description: "",
+    managementFee: "200", // 2% in basis points
+    performanceFee: "2000", // 20% in basis points
+    minDeposit: "10",
+    maxCapacity: "10000"
+  })
+
+  // Form state for deposit
+  const [depositAmount, setDepositAmount] = useState("")
+
+  useEffect(() => {
+    if (connected) {
+      fetchUserVaults()
+    }
+  }, [connected])
+
+  const handleCreateVault = async () => {
+    if (!connected) {
+      toast.error("Please connect your wallet to create a vault")
+      return
+    }
+
+    setIsCreating(true)
+    try {
+      await createVault({
+        name: vaultForm.name,
+        description: vaultForm.description,
+        strategy: "Multi-strategy", // Default strategy
+        managementFee: parseFloat(vaultForm.managementFee) / 100,
+        performanceFee: parseFloat(vaultForm.performanceFee) / 100,
+        minInvestment: parseFloat(vaultForm.minDeposit),
+        maxInvestors: 100 // Default max investors
+      })
+      
+      toast.success(`Vault created! ${vaultForm.name} is now live`)
+      
+      setCreateOpen(false)
+      setVaultForm({
+        name: "",
+        description: "",
+        managementFee: "200",
+        performanceFee: "2000",
+        minDeposit: "10",
+        maxCapacity: "10000"
+      })
+    } catch (error: any) {
+      toast.error(error.message || "Failed to create vault")
+    } finally {
+      setIsCreating(false)
+    }
+  }
+
+  const handleDeposit = async () => {
+    if (!selectedVault || !depositAmount) return
+
+    setIsDepositing(true)
+    try {
+      await depositToVault(selectedVault.id, parseFloat(depositAmount))
+      
+      toast.success(`Deposited ${depositAmount} APT successfully!`)
+      
+      setDepositOpen(false)
+      setDepositAmount("")
+      setSelectedVault(null)
+    } catch (error: any) {
+      toast.error(error.message || "Deposit failed")
+    } finally {
+      setIsDepositing(false)
+    }
+  }
+
+  const handleWithdraw = async (vaultId: number, shares: number) => {
+    try {
+      await withdrawFromVault(vaultId, shares)
+      toast.success("Withdrawal successful!")
+    } catch (error: any) {
+      toast.error(error.message || "Withdrawal failed")
+    }
+  }
 
   const topTraders = [
     { 
@@ -122,9 +231,18 @@ export default function Vault() {
                   </div>
 
                   <div className="flex items-center justify-end">
-                    <Dialog open={open} onOpenChange={setOpen}>
+                    <Dialog open={depositOpen && selectedVault?.id === trader.id} onOpenChange={(open) => {
+                      setDepositOpen(open)
+                      if (!open) setSelectedVault(null)
+                    }}>
                       <DialogTrigger asChild>
-                        <Button className="bg-primary hover:bg-primary/90 text-white font-light transition-all duration-200 shadow-sm hover:shadow-md">
+                        <Button 
+                          className="bg-primary hover:bg-primary/90 text-white font-light transition-all duration-200 shadow-sm hover:shadow-md"
+                          onClick={() => {
+                            setSelectedVault(trader)
+                            setDepositOpen(true)
+                          }}
+                        >
                           <TrendingUp className="h-4 w-4 mr-2" />
                           Follow Trader
                         </Button>
@@ -162,8 +280,14 @@ export default function Vault() {
                           </div>
                         </div>
                         <DialogFooter>
-                          <Button variant="outline" onClick={() => setOpen(false)} className="border-border/50 font-light">Cancel</Button>
-                          <Button onClick={() => setOpen(false)} className="bg-primary hover:bg-primary/90 text-white font-light">
+                          <Button variant="outline" onClick={() => {
+                            setDepositOpen(false)
+                            setSelectedVault(null)
+                            setAmount("100")
+                          }} className="border-border/50 font-light">Cancel</Button>
+                          <Button onClick={() => {
+                            handleDeposit()
+                          }} className="bg-primary hover:bg-primary/90 text-white font-light">
                             Confirm & Follow
                           </Button>
                         </DialogFooter>

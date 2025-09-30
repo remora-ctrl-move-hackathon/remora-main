@@ -53,7 +53,7 @@ export function WalletButton() {
     fetchBalance()
   }, [account, connected])
 
-  const handleConnect = async (walletName: string) => {
+  const handleConnect = async (walletName: any) => {
     try {
       await connect(walletName)
       setShowWalletModal(false)

@@ -54,8 +54,10 @@ export function useStreaming() {
       setLoading(true);
       const payload = await streamingService.createStream(params);
       
+      console.log("Transaction payload:", payload); // Debug log
+      
+      // The wallet adapter expects the payload directly
       const response = await signAndSubmitTransaction({
-        sender: account.address,
         data: payload,
       });
 
@@ -96,7 +98,6 @@ export function useStreaming() {
       const payload = await streamingService.withdrawFromStream(streamId);
       
       const response = await signAndSubmitTransaction({
-        sender: account.address,
         data: payload,
       });
 
@@ -129,7 +130,6 @@ export function useStreaming() {
       const payload = await streamingService.pauseStream(streamId);
       
       const response = await signAndSubmitTransaction({
-        sender: account.address,
         data: payload,
       });
 
@@ -162,7 +162,6 @@ export function useStreaming() {
       const payload = await streamingService.resumeStream(streamId);
       
       const response = await signAndSubmitTransaction({
-        sender: account.address,
         data: payload,
       });
 
@@ -195,7 +194,6 @@ export function useStreaming() {
       const payload = await streamingService.cancelStream(streamId);
       
       const response = await signAndSubmitTransaction({
-        sender: account.address,
         data: payload,
       });
 

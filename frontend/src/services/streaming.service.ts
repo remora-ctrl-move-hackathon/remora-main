@@ -37,7 +37,7 @@ export class StreamingService {
    */
   async initialize(): Promise<InputGenerateTransactionPayloadData> {
     return aptosClient.buildTransaction({
-      function: `${CONTRACTS.STREAMING.MODULE}::${CONTRACTS.STREAMING.FUNCTIONS.INITIALIZE}`,
+      function: `${CONTRACTS.STREAMING.MODULE}::${CONTRACTS.STREAMING.FUNCTIONS.INITIALIZE}` as `${string}::${string}::${string}`,
       functionArguments: [],
     });
   }
@@ -47,7 +47,7 @@ export class StreamingService {
    */
   async createStream(params: CreateStreamParams): Promise<InputGenerateTransactionPayloadData> {
     return aptosClient.buildTransaction({
-      function: `${CONTRACTS.STREAMING.MODULE}::${CONTRACTS.STREAMING.FUNCTIONS.CREATE_STREAM}`,
+      function: `${CONTRACTS.STREAMING.MODULE}::${CONTRACTS.STREAMING.FUNCTIONS.CREATE_STREAM}` as `${string}::${string}::${string}`,
       functionArguments: [
         params.receiver,
         formatAptAmount(params.totalAmount).toString(),
@@ -63,7 +63,7 @@ export class StreamingService {
    */
   async withdrawFromStream(streamId: number): Promise<InputGenerateTransactionPayloadData> {
     return aptosClient.buildTransaction({
-      function: `${CONTRACTS.STREAMING.MODULE}::${CONTRACTS.STREAMING.FUNCTIONS.WITHDRAW_FROM_STREAM}`,
+      function: `${CONTRACTS.STREAMING.MODULE}::${CONTRACTS.STREAMING.FUNCTIONS.WITHDRAW_FROM_STREAM}` as `${string}::${string}::${string}`,
       functionArguments: [
         streamId.toString(),
         this.moduleOwner,
@@ -76,7 +76,7 @@ export class StreamingService {
    */
   async pauseStream(streamId: number): Promise<InputGenerateTransactionPayloadData> {
     return aptosClient.buildTransaction({
-      function: `${CONTRACTS.STREAMING.MODULE}::${CONTRACTS.STREAMING.FUNCTIONS.PAUSE_STREAM}`,
+      function: `${CONTRACTS.STREAMING.MODULE}::${CONTRACTS.STREAMING.FUNCTIONS.PAUSE_STREAM}` as `${string}::${string}::${string}`,
       functionArguments: [
         streamId.toString(),
         this.moduleOwner,
@@ -89,7 +89,7 @@ export class StreamingService {
    */
   async resumeStream(streamId: number): Promise<InputGenerateTransactionPayloadData> {
     return aptosClient.buildTransaction({
-      function: `${CONTRACTS.STREAMING.MODULE}::${CONTRACTS.STREAMING.FUNCTIONS.RESUME_STREAM}`,
+      function: `${CONTRACTS.STREAMING.MODULE}::${CONTRACTS.STREAMING.FUNCTIONS.RESUME_STREAM}` as `${string}::${string}::${string}`,
       functionArguments: [
         streamId.toString(),
         this.moduleOwner,
@@ -102,7 +102,7 @@ export class StreamingService {
    */
   async cancelStream(streamId: number): Promise<InputGenerateTransactionPayloadData> {
     return aptosClient.buildTransaction({
-      function: `${CONTRACTS.STREAMING.MODULE}::${CONTRACTS.STREAMING.FUNCTIONS.CANCEL_STREAM}`,
+      function: `${CONTRACTS.STREAMING.MODULE}::${CONTRACTS.STREAMING.FUNCTIONS.CANCEL_STREAM}` as `${string}::${string}::${string}`,
       functionArguments: [
         streamId.toString(),
         this.moduleOwner,
@@ -116,8 +116,8 @@ export class StreamingService {
   async getStreamInfo(streamId: number): Promise<Stream | null> {
     try {
       const result = await aptosClient.viewFunction({
-        function: `${CONTRACTS.STREAMING.MODULE}::${CONTRACTS.STREAMING.VIEWS.GET_STREAM_INFO}`,
-        functionArguments: [streamId, this.moduleOwner],
+        function: `${CONTRACTS.STREAMING.MODULE}::${CONTRACTS.STREAMING.VIEWS.GET_STREAM_INFO}` as `${string}::${string}::${string}`,
+        functionArguments: [streamId.toString(), this.moduleOwner],
       });
 
       if (!result) return null;
@@ -147,8 +147,8 @@ export class StreamingService {
   async getWithdrawableAmount(streamId: number): Promise<number> {
     try {
       const result = await aptosClient.viewFunction({
-        function: `${CONTRACTS.STREAMING.MODULE}::${CONTRACTS.STREAMING.VIEWS.GET_WITHDRAWABLE_AMOUNT}`,
-        functionArguments: [streamId, this.moduleOwner],
+        function: `${CONTRACTS.STREAMING.MODULE}::${CONTRACTS.STREAMING.VIEWS.GET_WITHDRAWABLE_AMOUNT}` as `${string}::${string}::${string}`,
+        functionArguments: [streamId.toString(), this.moduleOwner],
       });
 
       return parseAptAmount(result);
@@ -164,7 +164,7 @@ export class StreamingService {
   async getUserSentStreams(userAddress: string): Promise<number[]> {
     try {
       const result = await aptosClient.viewFunction({
-        function: `${CONTRACTS.STREAMING.MODULE}::${CONTRACTS.STREAMING.VIEWS.GET_USER_SENT_STREAMS}`,
+        function: `${CONTRACTS.STREAMING.MODULE}::${CONTRACTS.STREAMING.VIEWS.GET_USER_SENT_STREAMS}` as `${string}::${string}::${string}`,
         functionArguments: [userAddress, this.moduleOwner],
       });
 
@@ -181,7 +181,7 @@ export class StreamingService {
   async getUserReceivedStreams(userAddress: string): Promise<number[]> {
     try {
       const result = await aptosClient.viewFunction({
-        function: `${CONTRACTS.STREAMING.MODULE}::${CONTRACTS.STREAMING.VIEWS.GET_USER_RECEIVED_STREAMS}`,
+        function: `${CONTRACTS.STREAMING.MODULE}::${CONTRACTS.STREAMING.VIEWS.GET_USER_RECEIVED_STREAMS}` as `${string}::${string}::${string}`,
         functionArguments: [userAddress, this.moduleOwner],
       });
 
@@ -198,7 +198,7 @@ export class StreamingService {
   async getTotalLockedAmount(): Promise<number> {
     try {
       const result = await aptosClient.viewFunction({
-        function: `${CONTRACTS.STREAMING.MODULE}::${CONTRACTS.STREAMING.VIEWS.GET_TOTAL_LOCKED_AMOUNT}`,
+        function: `${CONTRACTS.STREAMING.MODULE}::${CONTRACTS.STREAMING.VIEWS.GET_TOTAL_LOCKED_AMOUNT}` as `${string}::${string}::${string}`,
         functionArguments: [this.moduleOwner],
       });
 

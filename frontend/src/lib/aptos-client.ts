@@ -43,16 +43,42 @@ export class AptosClient {
     functionArguments: any[];
   }): Promise<any> {
     try {
-      const result = await aptos.view({
-        payload: {
-          function: payload.function,
-          typeArguments: payload.typeArguments || [],
-          functionArguments: payload.functionArguments,
-        },
-      });
+      // Use the correct API for view function
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_APTOS_NODE_URL || "https://fullnode.testnet.aptoslabs.com/v1"}/view`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            function: payload.function,
+            type_arguments: payload.typeArguments || [],
+            arguments: payload.functionArguments,
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error("View function error response:", errorText);
+        throw new Error(`Failed to call view function: ${response.status} ${errorText}`);
+      }
+
+      const result = await response.json();
       return result[0];
     } catch (error) {
       console.error("Error calling view function:", error);
+      // Return default values for common view functions to prevent app crashes
+      if (payload.function.includes("get_user_vaults") || 
+          payload.function.includes("get_user_sent_streams") ||
+          payload.function.includes("get_user_received_streams")) {
+        return [];
+      }
+      if (payload.function.includes("get_total") || 
+          payload.function.includes("get_balance")) {
+        return "0";
+      }
       throw error;
     }
   }

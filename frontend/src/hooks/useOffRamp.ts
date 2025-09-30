@@ -65,7 +65,6 @@ export function useOffRamp() {
       const payload = await offRampService.submitKYC(params);
       
       const response = await signAndSubmitTransaction({
-        sender: account.address,
         data: payload,
       });
 
@@ -103,7 +102,6 @@ export function useOffRamp() {
       const payload = await offRampService.createOffRampRequest(params);
       
       const response = await signAndSubmitTransaction({
-        sender: account.address,
         data: payload,
       });
 
@@ -142,7 +140,6 @@ export function useOffRamp() {
       const payload = await offRampService.cancelOffRampRequest(requestId);
       
       const response = await signAndSubmitTransaction({
-        sender: account.address,
         data: payload,
       });
 
