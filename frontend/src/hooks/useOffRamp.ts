@@ -92,11 +92,6 @@ export function useOffRamp() {
       return;
     }
 
-    if (!kycStatus.verified) {
-      toast.error("Please complete KYC verification first");
-      return;
-    }
-
     try {
       setLoading(true);
       const payload = await offRampService.createOffRampRequest(params);

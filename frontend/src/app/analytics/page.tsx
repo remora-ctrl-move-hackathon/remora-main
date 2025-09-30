@@ -108,7 +108,7 @@ export default function Analytics() {
         {/* Header */}
         <div className="flex items-center justify-between mb-10">
           <div>
-            <h1 className="text-3xl font-extralight text-gray-900">Analytics</h1>
+            <h1 className="text-3xl font-light text-gray-900">Analytics</h1>
             <p className="text-sm text-gray-500 font-light mt-1">Protocol metrics & portfolio insights</p>
           </div>
           <Badge variant="outline" className="text-xs border-primary/20 text-primary font-light">

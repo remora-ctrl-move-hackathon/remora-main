@@ -1,39 +1,41 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { Header } from "@/components/ui/header"
-import { ArrowLeft, ArrowRight, Banknote, CheckCircle2, Loader2, AlertCircle, Clock, DollarSign, Info } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Badge } from "@/components/ui/badge"
+import { Progress } from "@/components/ui/progress"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import { 
+  ArrowLeft, ArrowRight, Building, DollarSign, 
+  CheckCircle2, AlertCircle, Clock, Info, 
+  Loader2, CreditCard, Wallet, TrendingDown
+} from "lucide-react"
 import Link from "next/link"
 import { useWallet } from "@aptos-labs/wallet-adapter-react"
 import { useOffRamp } from "@/hooks/useOffRamp"
-import { parseAptAmount, OFFRAMP_STATUS } from "@/config/aptos"
 import toast from "react-hot-toast"
+import { OFFRAMP_STATUS } from "@/config/aptos"
 
 export default function Remit() {
-  const [step, setStep] = useState<"kyc" | "form" | "bank" | "confirm" | "processing">("form")
-  const [isSubmittingKYC, setIsSubmittingKYC] = useState(false)
-  const [isCreatingRequest, setIsCreatingRequest] = useState(false)
-  const [activeTab, setActiveTab] = useState("create")
-  
-  const { connected } = useWallet()
-  const {
+  const { connected, account } = useWallet()
+  const { 
     loading,
-    kycStatus,
-    exchangeRates,
     userRequests,
-    submitKYC,
+    exchangeRates,
     createOffRampRequest,
     fetchUserData
   } = useOffRamp()
 
-  // Form states
+  const [activeTab, setActiveTab] = useState<"new" | "history">("new")
+  const [step, setStep] = useState<"form" | "confirm" | "processing">("form")
+  const [isCreatingRequest, setIsCreatingRequest] = useState(false)
+  
   const [formData, setFormData] = useState({
     amount: "100",
     currency: "NGN",
@@ -44,85 +46,30 @@ export default function Remit() {
     reason: "Personal remittance"
   })
 
-  // KYC form states
-  const [kycData, setKycData] = useState({
-    fullName: "",
-    email: "",
-    phoneNumber: "",
-    country: "NG"
-  })
-
-  const currencies = [
-    { code: "NGN", name: "Nigeria", flag: "🇳🇬", symbol: "₦", available: true },
-    { code: "USD", name: "United States", flag: "🇺🇸", symbol: "$", available: true },
-    { code: "EUR", name: "Europe", flag: "🇪🇺", symbol: "€", available: false },
-    { code: "GBP", name: "United Kingdom", flag: "🇬🇧", symbol: "£", available: false },
-    { code: "INR", name: "India", flag: "🇮🇳", symbol: "₹", available: false },
-  ]
-
-  const nigerianBanks = [
-    "Guaranty Trust Bank",
-    "First Bank of Nigeria", 
-    "United Bank for Africa",
-    "Access Bank",
-    "Zenith Bank",
-    "Stanbic IBTC Bank",
-    "Fidelity Bank",
-    "Union Bank",
-    "Sterling Bank",
-    "Wema Bank"
-  ]
-
-  useEffect(() => {
-    if (connected) {
-      fetchUserData()
-    }
-  }, [connected, fetchUserData])
-
-  const getExchangeRate = () => {
-    const rate = exchangeRates[formData.currency]
-    return rate || 1850 // Default rate for NGN
+  const banks = {
+    NGN: [
+      { name: "GTBank", code: "058" },
+      { name: "First Bank", code: "011" },
+      { name: "Access Bank", code: "044" },
+      { name: "UBA", code: "033" },
+      { name: "Zenith Bank", code: "057" }
+    ],
+    USD: [
+      { name: "Chase Bank", code: "021" },
+      { name: "Bank of America", code: "026" },
+      { name: "Wells Fargo", code: "121" },
+      { name: "Citibank", code: "021" }
+    ]
   }
 
-  const getConvertedAmount = () => {
-    const rate = getExchangeRate()
-    return (parseFloat(formData.amount || "0") * rate).toFixed(2)
-  }
-
-  const handleSubmitKYC = async () => {
-    if (!connected) {
-      toast.error("Please connect your wallet first")
-      return
-    }
-
-    setIsSubmittingKYC(true)
-    try {
-      await submitKYC({
-        fullName: kycData.fullName,
-        email: kycData.email,
-        phoneNumber: kycData.phoneNumber,
-        country: kycData.country
-      })
-      
-      toast.success("KYC submitted! Your verification is being processed")
-      
-      setStep("form")
-    } catch (error: any) {
-      toast.error(error.message || "KYC submission failed")
-    } finally {
-      setIsSubmittingKYC(false)
-    }
+  const getFiatAmount = () => {
+    const rate = exchangeRates[formData.currency] || 1
+    return (parseFloat(formData.amount) * rate).toFixed(2)
   }
 
   const handleCreateRequest = async () => {
     if (!connected) {
       toast.error("Please connect your wallet first")
-      return
-    }
-
-    if (!kycStatus?.verified) {
-      toast.error("Please complete KYC verification first")
-      setStep("kyc")
       return
     }
 
@@ -185,7 +132,7 @@ export default function Remit() {
     }
   }
 
-  // KYC Step
+  // Not connected state
   if (!connected) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-white to-primary/5">
@@ -203,89 +150,17 @@ export default function Remit() {
     )
   }
 
-  if (step === "kyc" && (!kycStatus || !kycStatus.verified)) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-white to-primary/5">
-        <Header />
-        <div className="max-w-screen-xl mx-auto px-8 py-12">
-          <Card className="max-w-md mx-auto">
-            <CardHeader>
-              <CardTitle>KYC Verification Required</CardTitle>
-              <CardDescription>Complete your verification to start using off-ramp</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label>Full Name</Label>
-                <Input 
-                  placeholder="John Doe"
-                  value={kycData.fullName}
-                  onChange={(e) => setKycData({...kycData, fullName: e.target.value})}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Email</Label>
-                <Input 
-                  type="email"
-                  placeholder="john.doe@example.com"
-                  value={kycData.email}
-                  onChange={(e) => setKycData({...kycData, email: e.target.value})}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Phone Number</Label>
-                <Input 
-                  type="tel"
-                  placeholder="+234 800 000 0000"
-                  value={kycData.phoneNumber}
-                  onChange={(e) => setKycData({...kycData, phoneNumber: e.target.value})}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Country</Label>
-                <Select 
-                  value={kycData.country}
-                  onValueChange={(value) => setKycData({...kycData, country: value})}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="NG">Nigeria</SelectItem>
-                    <SelectItem value="US">United States</SelectItem>
-                    <SelectItem value="GB">United Kingdom</SelectItem>
-                    <SelectItem value="KE">Kenya</SelectItem>
-                    <SelectItem value="GH">Ghana</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <Button 
-                className="w-full"
-                onClick={handleSubmitKYC}
-                disabled={isSubmittingKYC || !kycData.fullName || !kycData.email || !kycData.phoneNumber}
-              >
-                {isSubmittingKYC ? (
-                  <><Loader2 className="h-4 w-4 animate-spin mr-2" /> Submitting...</>
-                ) : (
-                  "Submit KYC"
-                )}
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-    )
-  }
-
+  // Processing state
   if (step === "processing") {
     return (
       <div className="min-h-screen bg-gradient-to-br from-white to-primary/5">
         <Header />
         <div className="max-w-screen-xl mx-auto px-8 py-12">
           <Card className="max-w-md mx-auto">
-            <CardContent className="pt-6 text-center py-12">
-              <Loader2 className="h-12 w-12 mx-auto mb-4 animate-spin text-primary" />
-              <h3 className="text-lg font-semibold mb-2">Processing Your Request</h3>
-              <p className="text-gray-500">This may take a few moments...</p>
+            <CardContent className="pt-6 text-center">
+              <Loader2 className="h-12 w-12 animate-spin mx-auto mb-4 text-primary" />
+              <h3 className="text-lg font-semibold mb-2">Processing Request</h3>
+              <p className="text-gray-500">Please wait while we process your off-ramp request...</p>
             </CardContent>
           </Card>
         </div>
@@ -293,394 +168,322 @@ export default function Remit() {
     )
   }
 
+  // Confirmation step
+  if (step === "confirm") {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-white to-primary/5">
+        <Header />
+        <div className="max-w-screen-xl mx-auto px-8 py-12">
+          <Card className="max-w-lg mx-auto">
+            <CardHeader>
+              <CardTitle>Confirm Transfer Details</CardTitle>
+              <CardDescription>Review your bank transfer information</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-3 border rounded-lg p-4 bg-gray-50">
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Amount (APT)</span>
+                  <span className="font-semibold">{formData.amount} APT</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">You Receive</span>
+                  <span className="font-semibold">
+                    {formData.currency === "NGN" ? "₦" : "$"}
+                    {getFiatAmount()}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Exchange Rate</span>
+                  <span className="text-sm">1 APT = {exchangeRates[formData.currency] || 1} {formData.currency}</span>
+                </div>
+              </div>
+
+              <div className="space-y-3 border rounded-lg p-4">
+                <h4 className="font-semibold">Bank Details</h4>
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Bank</span>
+                    <span>{formData.bankName}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Account Name</span>
+                    <span>{formData.accountName}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Account Number</span>
+                    <span>{formData.accountNumber}</span>
+                  </div>
+                  {formData.swiftCode && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">SWIFT Code</span>
+                      <span>{formData.swiftCode}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <Alert>
+                <Info className="h-4 w-4" />
+                <AlertDescription>
+                  Funds will be sent to your bank account within 1-2 business hours after confirmation.
+                </AlertDescription>
+              </Alert>
+
+              <div className="flex gap-3">
+                <Button 
+                  variant="outline" 
+                  className="flex-1"
+                  onClick={() => setStep("form")}
+                >
+                  Back
+                </Button>
+                <Button 
+                  className="flex-1"
+                  onClick={handleCreateRequest}
+                  disabled={isCreatingRequest}
+                >
+                  {isCreatingRequest ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Processing...
+                    </>
+                  ) : (
+                    "Confirm Transfer"
+                  )}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    )
+  }
+
+  // Main form
   return (
     <div className="min-h-screen bg-gradient-to-br from-white to-primary/5">
       <Header />
-      
       <div className="max-w-screen-xl mx-auto px-8 py-12">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <div className="flex items-center gap-3">
-            <Link href="/">
-              <Button variant="ghost" size="icon">
-                <ArrowLeft className="h-5 w-5" />
-              </Button>
-            </Link>
-            <div>
-              <h1 className="text-2xl font-extralight">Off-Ramp to Bank</h1>
-              <p className="text-sm text-gray-500">Convert APT to fiat currency</p>
-            </div>
-          </div>
+        <div className="mb-8">
+          <h1 className="text-3xl font-light text-gray-900">Off Ramp</h1>
+          <p className="text-sm text-gray-500 font-light mt-1">Convert APT to fiat and send to bank account</p>
         </div>
 
-        {/* Stats */}
-        {kycStatus?.verified && (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-            <Card className="bg-white border-border/50">
-              <CardContent className="pt-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-gray-500">KYC Status</p>
-                    <p className="text-lg font-semibold text-green-600">Verified</p>
-                  </div>
-                  <CheckCircle2 className="h-8 w-8 text-green-500" />
-                </div>
-              </CardContent>
-            </Card>
-            
-            <Card className="bg-white border-border/50">
-              <CardContent className="pt-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-gray-500">Daily Limit</p>
-                    <p className="text-lg font-semibold">5,000 APT</p>
-                  </div>
-                  <DollarSign className="h-8 w-8 text-primary" />
-                </div>
-              </CardContent>
-            </Card>
-            
-            <Card className="bg-white border-border/50">
-              <CardContent className="pt-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-gray-500">Total Off-ramped</p>
-                    <p className="text-lg font-semibold">
-                      {userRequests.reduce((acc, req) => {
-                        if (req.status === OFFRAMP_STATUS.COMPLETED) {
-                          return acc + req.aptAmount / 100_000_000
-                        }
-                        return acc
-                      }, 0).toFixed(2)} APT
-                    </p>
-                  </div>
-                  <Banknote className="h-8 w-8 text-blue-500" />
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        )}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+          <Card className="bg-gradient-to-br from-primary/5 to-primary/10 border-primary/20">
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-primary font-light">Total Converted</span>
+                <DollarSign className="h-5 w-5 text-primary" />
+              </div>
+              <div className="text-2xl font-light text-gray-900">
+                {userRequests.reduce((sum, r) => sum + r.aptAmount, 0).toFixed(2)} APT
+              </div>
+            </CardContent>
+          </Card>
 
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-2 bg-white border">
-            <TabsTrigger value="create">Create Request</TabsTrigger>
-            <TabsTrigger value="history">History</TabsTrigger>
+          <Card className="bg-gradient-to-br from-primary/5 to-primary/10 border-primary/20">
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-primary font-light">Completed</span>
+                <CheckCircle2 className="h-5 w-5 text-primary" />
+              </div>
+              <div className="text-2xl font-light text-gray-900">
+                {userRequests.filter(r => r.status === OFFRAMP_STATUS.COMPLETED).length} Transfers
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-gradient-to-br from-primary/5 to-primary/10 border-primary/20">
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-primary font-light">Exchange Rate</span>
+                <TrendingDown className="h-5 w-5 text-primary" />
+              </div>
+              <div className="text-2xl font-light text-gray-900">
+                Live Rates
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "new" | "history")}>
+          <TabsList className="grid w-full max-w-[400px] grid-cols-2">
+            <TabsTrigger value="new">New Transfer</TabsTrigger>
+            <TabsTrigger value="history">Transfer History</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="create" className="mt-6">
-            {step === "form" && (
-              <Card className="max-w-2xl mx-auto">
-                <CardHeader>
-                  <CardTitle>Convert APT to Fiat</CardTitle>
-                  <CardDescription>Send money directly to your bank account</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  <div className="space-y-4">
+          <TabsContent value="new" className="mt-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="font-light">Create Bank Transfer</CardTitle>
+                <CardDescription>Send APT to your bank account</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <Label>Amount (APT)</Label>
+                    <Input
+                      type="number"
+                      placeholder="100"
+                      value={formData.amount}
+                      onChange={(e) => setFormData({...formData, amount: e.target.value})}
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label>Currency</Label>
+                    <Select 
+                      value={formData.currency}
+                      onValueChange={(value) => setFormData({...formData, currency: value})}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="NGN">Nigerian Naira (₦)</SelectItem>
+                        <SelectItem value="USD">US Dollar ($)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                <div className="p-4 bg-gray-50 rounded-lg">
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-600">You will receive:</span>
+                    <span className="text-2xl font-semibold">
+                      {formData.currency === "NGN" ? "₦" : "$"}
+                      {getFiatAmount()}
+                    </span>
+                  </div>
+                  <div className="text-sm text-gray-500 mt-1">
+                    Exchange rate: 1 APT = {exchangeRates[formData.currency] || 1} {formData.currency}
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <h3 className="font-semibold flex items-center gap-2">
+                    <Building className="h-4 w-4" />
+                    Bank Information
+                  </h3>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label>Amount (APT)</Label>
-                      <Input 
-                        type="number"
-                        placeholder="100"
-                        value={formData.amount}
-                        onChange={(e) => setFormData({...formData, amount: e.target.value})}
-                      />
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label>Currency</Label>
-                      <Select 
-                        value={formData.currency}
-                        onValueChange={(value) => setFormData({...formData, currency: value})}
+                      <Label>Bank Name</Label>
+                      <Select
+                        value={formData.bankName}
+                        onValueChange={(value) => setFormData({...formData, bankName: value})}
                       >
                         <SelectTrigger>
-                          <SelectValue />
+                          <SelectValue placeholder="Select bank" />
                         </SelectTrigger>
                         <SelectContent>
-                          {currencies.map((currency) => (
-                            <SelectItem 
-                              key={currency.code} 
-                              value={currency.code}
-                              disabled={!currency.available}
-                            >
-                              <span className="flex items-center gap-2">
-                                {currency.flag} {currency.name} ({currency.code})
-                                {!currency.available && <span className="text-xs text-gray-400">Coming soon</span>}
-                              </span>
+                          {banks[formData.currency as keyof typeof banks]?.map((bank) => (
+                            <SelectItem key={bank.code} value={bank.name}>
+                              {bank.name}
                             </SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
                     </div>
 
-                    <Alert>
-                      <Info className="h-4 w-4" />
-                      <AlertDescription>
-                        You will receive approximately {currencies.find(c => c.code === formData.currency)?.symbol}
-                        {getConvertedAmount()} at current rate (1 APT = {currencies.find(c => c.code === formData.currency)?.symbol}{getExchangeRate()})
-                      </AlertDescription>
-                    </Alert>
+                    <div className="space-y-2">
+                      <Label>Account Number</Label>
+                      <Input
+                        placeholder={formData.currency === "NGN" ? "0123456789" : "123456789"}
+                        value={formData.accountNumber}
+                        onChange={(e) => setFormData({...formData, accountNumber: e.target.value})}
+                      />
+                    </div>
 
-                    <Button 
-                      className="w-full"
-                      onClick={() => setStep("bank")}
-                      disabled={!formData.amount || parseFloat(formData.amount) <= 0}
-                    >
-                      Continue to Bank Details
-                      <ArrowRight className="h-4 w-4 ml-2" />
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
+                    <div className="space-y-2">
+                      <Label>Account Name</Label>
+                      <Input
+                        placeholder="John Doe"
+                        value={formData.accountName}
+                        onChange={(e) => setFormData({...formData, accountName: e.target.value})}
+                      />
+                    </div>
 
-            {step === "bank" && (
-              <Card className="max-w-2xl mx-auto">
-                <CardHeader>
-                  <CardTitle>Bank Account Details</CardTitle>
-                  <CardDescription>Where should we send the money?</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  <div className="space-y-4">
-                    {formData.currency === "NGN" ? (
-                      <>
-                        <div className="space-y-2">
-                          <Label>Bank Name</Label>
-                          <Select 
-                            value={formData.bankName}
-                            onValueChange={(value) => setFormData({...formData, bankName: value})}
-                          >
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select your bank" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {nigerianBanks.map((bank) => (
-                                <SelectItem key={bank} value={bank}>
-                                  {bank}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
-                        
-                        <div className="space-y-2">
-                          <Label>Account Number</Label>
-                          <Input 
-                            placeholder="0123456789"
-                            value={formData.accountNumber}
-                            onChange={(e) => setFormData({...formData, accountNumber: e.target.value})}
-                          />
-                        </div>
-                        
-                        <div className="space-y-2">
-                          <Label>Account Name</Label>
-                          <Input 
-                            placeholder="John Doe"
-                            value={formData.accountName}
-                            onChange={(e) => setFormData({...formData, accountName: e.target.value})}
-                          />
-                        </div>
-                      </>
-                    ) : (
-                      <>
-                        <div className="space-y-2">
-                          <Label>Bank Name</Label>
-                          <Input 
-                            placeholder="Bank of America"
-                            value={formData.bankName}
-                            onChange={(e) => setFormData({...formData, bankName: e.target.value})}
-                          />
-                        </div>
-                        
-                        <div className="space-y-2">
-                          <Label>Account/IBAN</Label>
-                          <Input 
-                            placeholder="US12345678901234567890"
-                            value={formData.accountNumber}
-                            onChange={(e) => setFormData({...formData, accountNumber: e.target.value})}
-                          />
-                        </div>
-                        
-                        <div className="space-y-2">
-                          <Label>Account Name</Label>
-                          <Input 
-                            placeholder="John Doe"
-                            value={formData.accountName}
-                            onChange={(e) => setFormData({...formData, accountName: e.target.value})}
-                          />
-                        </div>
-                        
-                        <div className="space-y-2">
-                          <Label>SWIFT Code</Label>
-                          <Input 
-                            placeholder="CHASUS33"
-                            value={formData.swiftCode}
-                            onChange={(e) => setFormData({...formData, swiftCode: e.target.value})}
-                          />
-                        </div>
-                      </>
+                    {formData.currency === "USD" && (
+                      <div className="space-y-2">
+                        <Label>SWIFT Code (Optional)</Label>
+                        <Input
+                          placeholder="CHASUS33"
+                          value={formData.swiftCode}
+                          onChange={(e) => setFormData({...formData, swiftCode: e.target.value})}
+                        />
+                      </div>
                     )}
                   </div>
+                </div>
 
-                  <div className="flex gap-3">
-                    <Button 
-                      variant="outline"
-                      onClick={() => setStep("form")}
-                      className="flex-1"
-                    >
-                      <ArrowLeft className="h-4 w-4 mr-2" />
-                      Back
-                    </Button>
-                    <Button 
-                      className="flex-1"
-                      onClick={() => setStep("confirm")}
-                      disabled={!formData.bankName || !formData.accountNumber || !formData.accountName}
-                    >
-                      Review Transaction
-                      <ArrowRight className="h-4 w-4 ml-2" />
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-
-            {step === "confirm" && (
-              <Card className="max-w-2xl mx-auto">
-                <CardHeader>
-                  <CardTitle>Confirm Transaction</CardTitle>
-                  <CardDescription>Review your off-ramp details</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  <div className="space-y-4">
-                    <div className="bg-gray-50 rounded-lg p-4 space-y-3">
-                      <div className="flex justify-between">
-                        <span className="text-gray-500">Amount</span>
-                        <span className="font-semibold">{formData.amount} APT</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-500">You'll receive</span>
-                        <span className="font-semibold">
-                          {currencies.find(c => c.code === formData.currency)?.symbol}
-                          {getConvertedAmount()} {formData.currency}
-                        </span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-500">Bank</span>
-                        <span className="font-semibold">{formData.bankName}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-500">Account</span>
-                        <span className="font-semibold">{formData.accountNumber}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-500">Name</span>
-                        <span className="font-semibold">{formData.accountName}</span>
-                      </div>
-                    </div>
-
-                    <Alert>
-                      <AlertCircle className="h-4 w-4" />
-                      <AlertDescription>
-                        Processing time: 1-3 business days. You'll receive an email confirmation once the transfer is complete.
-                      </AlertDescription>
-                    </Alert>
-
-                    <div className="flex gap-3">
-                      <Button 
-                        variant="outline"
-                        onClick={() => setStep("bank")}
-                        className="flex-1"
-                      >
-                        <ArrowLeft className="h-4 w-4 mr-2" />
-                        Back
-                      </Button>
-                      <Button 
-                        className="flex-1"
-                        onClick={handleCreateRequest}
-                        disabled={isCreatingRequest}
-                      >
-                        {isCreatingRequest ? (
-                          <><Loader2 className="h-4 w-4 animate-spin mr-2" /> Processing...</>
-                        ) : (
-                          <>Confirm & Submit</>
-                        )}
-                      </Button>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
+                <Button 
+                  className="w-full" 
+                  size="lg"
+                  onClick={() => setStep("confirm")}
+                  disabled={
+                    !formData.amount || 
+                    !formData.bankName || 
+                    !formData.accountNumber || 
+                    !formData.accountName ||
+                    loading
+                  }
+                >
+                  <CreditCard className="h-4 w-4 mr-2" />
+                  Continue to Confirmation
+                </Button>
+              </CardContent>
+            </Card>
           </TabsContent>
 
-          <TabsContent value="history" className="mt-6 space-y-4">
-            {loading ? (
-              <div className="flex justify-center py-8">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
-              </div>
-            ) : userRequests.length === 0 ? (
-              <Card>
-                <CardContent className="pt-6 text-center py-8">
-                  <p className="text-gray-500">No off-ramp requests yet</p>
-                  <Button 
-                    onClick={() => setActiveTab("create")} 
-                    className="mt-4"
-                  >
-                    Create your first request
-                  </Button>
-                </CardContent>
-              </Card>
-            ) : (
-              userRequests.map((request) => {
-                const status = getStatusBadge(request.status)
-                const StatusIcon = status.icon
-                
-                return (
-                  <Card key={request.requestId} className="bg-white">
-                    <CardContent className="pt-6">
-                      <div className="flex items-start justify-between mb-4">
-                        <div>
-                          <div className="flex items-center gap-2 mb-1">
-                            <StatusIcon className={`h-4 w-4 ${status.color}`} />
-                            <span className={`text-sm font-semibold ${status.color}`}>
+          <TabsContent value="history" className="mt-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="font-light">Transfer History</CardTitle>
+                <CardDescription>Your recent bank transfers</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {userRequests.length === 0 ? (
+                  <div className="text-center py-8 text-gray-500">
+                    <Wallet className="h-12 w-12 mx-auto mb-3 text-gray-300" />
+                    <p>No transfers yet</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {userRequests.map((request) => {
+                      const status = getStatusBadge(request.status)
+                      const StatusIcon = status.icon
+                      
+                      return (
+                        <div key={request.requestId} className="border rounded-lg p-4 hover:bg-gray-50 transition-colors">
+                          <div className="flex items-center justify-between mb-2">
+                            <div className="flex items-center gap-3">
+                              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                                <StatusIcon className={`h-5 w-5 ${status.color}`} />
+                              </div>
+                              <div>
+                                <div className="font-semibold">{request.aptAmount} APT → {request.currency}</div>
+                                <div className="text-sm text-gray-500">
+                                  {request.bankInfo.bankName} - {request.bankInfo.accountNumber}
+                                </div>
+                              </div>
+                            </div>
+                            <Badge className={status.color}>
                               {status.text}
-                            </span>
+                            </Badge>
                           </div>
-                          <p className="text-lg">{(request.aptAmount / 100_000_000).toFixed(2)} APT → {request.currency}</p>
-                          <p className="text-sm text-gray-500">
-                            {request.bankInfo.bankName} - {request.bankInfo.accountNumber}
-                          </p>
+                          <div className="flex justify-between text-sm text-gray-500 mt-3">
+                            <span>{new Date(request.createdAt * 1000).toLocaleDateString()}</span>
+                            <span>{request.fiatAmount.toFixed(2)} {request.currency}</span>
+                          </div>
                         </div>
-                        <div className="text-right">
-                          <p className="text-sm text-gray-500">
-                            {new Date(request.createdAt * 1000).toLocaleDateString()}
-                          </p>
-                          <p className="text-xs text-gray-400">
-                            ID: #{request.requestId}
-                          </p>
-                        </div>
-                      </div>
-                      
-                      {request.status === OFFRAMP_STATUS.PROCESSING && (
-                        <Alert>
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                          <AlertDescription>
-                            Your request is being processed. Expected completion: 1-3 business days.
-                          </AlertDescription>
-                        </Alert>
-                      )}
-                      
-                      {request.status === OFFRAMP_STATUS.COMPLETED && (
-                        <Alert className="border-green-200 bg-green-50">
-                          <CheckCircle2 className="h-4 w-4 text-green-600" />
-                          <AlertDescription className="text-green-700">
-                            Transfer completed successfully!
-                          </AlertDescription>
-                        </Alert>
-                      )}
-                    </CardContent>
-                  </Card>
-                )
-              })
-            )}
+                      )
+                    })}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
           </TabsContent>
         </Tabs>
       </div>
