@@ -1,7 +1,7 @@
 import { Aptos, AptosConfig, Network } from "@aptos-labs/ts-sdk";
 
 // Contract addresses - Update these after deployment
-export const MODULE_ADDRESS = process.env.NEXT_PUBLIC_MODULE_ADDRESS || "0xCAFE";
+export const MODULE_ADDRESS = "0xe95e7998587e360db1185b3aa020dd07d77429ec340bbcd2bc8bc455e71d0e1a";
 export const MODULE_NAME = "remora";
 
 // Network configuration
