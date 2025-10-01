@@ -84,7 +84,7 @@ export class PerpetualTradingService {
     try {
       const payload = await client.payloads.placeMarketOrder({
         pair: params.pair,
-        userAddress,
+        userAddress: userAddress as `0x${string}`,
         sizeDelta: formatMerkleAmount(params.size),
         collateralDelta: formatMerkleAmount(params.collateral),
         isLong: params.isLong,
@@ -110,7 +110,7 @@ export class PerpetualTradingService {
     try {
       const payload = await client.payloads.placeLimitOrder({
         pair: params.pair,
-        userAddress,
+        userAddress: userAddress as `0x${string}`,
         sizeDelta: formatMerkleAmount(params.size),
         collateralDelta: formatMerkleAmount(params.collateral),
         price: formatMerkleAmount(params.triggerPrice),
@@ -161,7 +161,7 @@ export class PerpetualTradingService {
       })
       
       return positions.map((pos: any) => ({
-        pair: pos.pair as TradingPair,
+        pair: pos.pairType as TradingPair,
         size: parseMerkleAmount(pos.size),
         collateral: parseMerkleAmount(pos.collateral),
         isLong: pos.isLong,
@@ -169,7 +169,7 @@ export class PerpetualTradingService {
         markPrice: parseMerkleAmount(pos.markPrice),
         pnl: parseMerkleAmount(pos.pnl),
         liquidationPrice: parseMerkleAmount(pos.liquidationPrice),
-        timestamp: pos.timestamp,
+        timestamp: pos.timestamp?.getTime() || Date.now(),
       }))
     } catch (error) {
       console.error('Error fetching positions:', error)
@@ -187,7 +187,13 @@ export class PerpetualTradingService {
       const orders = await client.api.getOrders({ 
         address: userAddress as `0x${string}` 
       })
-      return orders
+      return orders.map((order: any) => ({
+        ...order,
+        sizeDelta: parseMerkleAmount(order.sizeDelta),
+        collateralDelta: parseMerkleAmount(order.collateralDelta),
+        price: parseMerkleAmount(order.price),
+        timestamp: order.timestamp?.getTime() || Date.now(),
+      }))
     } catch (error) {
       console.error('Error fetching orders:', error)
       return []
@@ -204,7 +210,13 @@ export class PerpetualTradingService {
       const history = await client.api.getTradingHistory({ 
         address: userAddress as `0x${string}` 
       })
-      return history
+      return history.map((trade: any) => ({
+        ...trade,
+        size: parseMerkleAmount(trade.sizeDelta || trade.size || 0),
+        pnl: parseMerkleAmount(trade.pnlWithoutFee || trade.pnl || 0),
+        price: parseMerkleAmount(trade.price || 0),
+        timestamp: trade.timestamp?.getTime() || Date.now(),
+      }))
     } catch (error) {
       console.error('Error fetching trading history:', error)
       return []
@@ -253,9 +265,19 @@ export class PerpetualTradingService {
     const client = await this.ensureInitialized()
     
     try {
-      // This would need to be implemented based on Merkle's price API
-      // For now, return a placeholder
-      return 50000 // Placeholder price
+      const summary = await client.api.getSummary()
+      const pairData = summary.pairs.find(p => p.id === pair || p.symbol === pair)
+      
+      if (pairData) {
+        // Look for price in summary.prices
+        const priceData = summary.prices.find(p => p.id === pairData.id)
+        if (priceData && priceData.price) {
+          return priceData.price
+        }
+      }
+      
+      // Fallback: return placeholder price
+      return 50000
     } catch (error) {
       console.error('Error fetching market price:', error)
       return 0

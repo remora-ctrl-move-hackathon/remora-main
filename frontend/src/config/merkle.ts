@@ -52,17 +52,25 @@ export async function createMerkleClient(): Promise<MerkleClient> {
 
 /**
  * Format amount for Merkle Trade (converts to smallest units)
+ * Following SDK example: sizeDelta: 300_000_000n (for $300)
  */
 export function formatMerkleAmount(amount: number): bigint {
   // Merkle Trade uses 6 decimal places for USDC
+  // Example: $300 = 300_000_000n
   return BigInt(Math.floor(amount * 1_000_000))
 }
 
 /**
  * Parse amount from Merkle Trade (converts from smallest units)
  */
-export function parseMerkleAmount(amount: bigint | string): number {
-  return Number(amount) / 1_000_000
+export function parseMerkleAmount(amount: bigint | string | number): number {
+  if (typeof amount === 'bigint') {
+    return Number(amount) / 1_000_000
+  }
+  if (typeof amount === 'string') {
+    return Number(amount) / 1_000_000
+  }
+  return amount / 1_000_000
 }
 
 /**
