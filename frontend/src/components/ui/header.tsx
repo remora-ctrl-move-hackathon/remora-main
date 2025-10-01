@@ -18,7 +18,9 @@ export function Header() {
       <div className="max-w-screen-xl mx-auto px-8">
         <div className="flex items-center justify-between py-4">
           <div className="flex items-center gap-8">
-            <h1 className="text-2xl font-bold tracking-wide text-foreground">Remora</h1>
+            <Link href="/landing">
+              <h1 className="text-2xl font-bold tracking-wide text-foreground hover:text-primary transition-colors cursor-pointer">Remora</h1>
+            </Link>
             <nav className="hidden md:flex items-center gap-6">
               <Link 
                 href="/"

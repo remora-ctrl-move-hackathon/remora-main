@@ -32,12 +32,15 @@ export default function Vault() {
     createVault,
     depositToVault,
     withdrawFromVault,
+    getInvestorShares,
     fetchUserVaults
   } = useVault()
 
   const [openCreate, setOpenCreate] = useState(false)
   const [openDeposit, setOpenDeposit] = useState(false)
+  const [openWithdraw, setOpenWithdraw] = useState(false)
   const [selectedVault, setSelectedVault] = useState<any>(null)
+  const [userShares, setUserShares] = useState<number>(0)
   const [activeTab, setActiveTab] = useState<"all" | "invested" | "managed">("all")
   
   const [vaultForm, setVaultForm] = useState({
@@ -49,6 +52,7 @@ export default function Vault() {
   })
 
   const [depositAmount, setDepositAmount] = useState("100")
+  const [withdrawAmount, setWithdrawAmount] = useState("0")
 
   const handleCreateVault = async () => {
     if (!connected) {
@@ -95,9 +99,32 @@ export default function Vault() {
     }
   }
 
-  const handleWithdraw = async (vaultId: number, shares: number) => {
+  const openWithdrawDialog = async (vault: any) => {
     try {
-      await withdrawFromVault(vaultId, shares)
+      setSelectedVault(vault)
+      // Get user's shares in this vault
+      const shares = await getInvestorShares(vault.vaultId)
+      setUserShares(shares)
+      setWithdrawAmount(shares.toString())
+      setOpenWithdraw(true)
+    } catch (error: any) {
+      toast.error("Failed to get shares information")
+    }
+  }
+
+  const handleWithdraw = async () => {
+    if (!selectedVault || !withdrawAmount) return
+
+    const sharesToWithdraw = parseFloat(withdrawAmount)
+    if (sharesToWithdraw <= 0 || sharesToWithdraw > userShares) {
+      toast.error("Invalid withdrawal amount")
+      return
+    }
+
+    try {
+      await withdrawFromVault(selectedVault.vaultId, sharesToWithdraw)
+      setOpenWithdraw(false)
+      setWithdrawAmount("0")
       toast.success("Withdrawal successful!")
     } catch (error: any) {
       toast.error(error.message || "Failed to withdraw")
@@ -374,7 +401,7 @@ export default function Vault() {
                             <Button 
                               variant="outline"
                               className="flex-1"
-                              onClick={() => handleWithdraw(vault.vaultId, 100)}
+                              onClick={() => openWithdrawDialog(vault)}
                             >
                               <ArrowDownRight className="h-4 w-4 mr-1" />
                               Withdraw
@@ -440,6 +467,103 @@ export default function Vault() {
                 disabled={!depositAmount || parseFloat(depositAmount) < (selectedVault?.minInvestment || 0)}
               >
                 Deposit
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Withdraw Dialog */}
+        <Dialog open={openWithdraw} onOpenChange={setOpenWithdraw}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Withdraw from Vault</DialogTitle>
+              <DialogDescription>
+                Withdraw your investment from {selectedVault?.name}
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="withdrawAmount">Shares to Withdraw</Label>
+                <Input 
+                  id="withdrawAmount" 
+                  type="number" 
+                  placeholder="0" 
+                  value={withdrawAmount}
+                  onChange={(e) => setWithdrawAmount(e.target.value)}
+                  max={userShares}
+                />
+                <p className="text-xs text-gray-500">
+                  Your shares: {userShares.toFixed(6)}
+                </p>
+              </div>
+              
+              {selectedVault && userShares > 0 && (
+                <div className="p-3 bg-gray-50 rounded-lg space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Your Shares</span>
+                    <span>{userShares.toFixed(6)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Estimated Value</span>
+                    <span>
+                      {selectedVault.totalShares > 0 
+                        ? ((parseFloat(withdrawAmount || "0") * selectedVault.totalValue) / selectedVault.totalShares).toFixed(2)
+                        : "0.00"
+                      } APT
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">% of Total Shares</span>
+                    <span>
+                      {userShares > 0 
+                        ? ((parseFloat(withdrawAmount || "0") / userShares) * 100).toFixed(1)
+                        : "0"
+                      }%
+                    </span>
+                  </div>
+                </div>
+              )}
+              
+              <div className="flex gap-2">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => setWithdrawAmount((userShares * 0.25).toString())}
+                >
+                  25%
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => setWithdrawAmount((userShares * 0.5).toString())}
+                >
+                  50%
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => setWithdrawAmount((userShares * 0.75).toString())}
+                >
+                  75%
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => setWithdrawAmount(userShares.toString())}
+                >
+                  100%
+                </Button>
+              </div>
+            </div>
+            <div className="flex justify-end gap-3">
+              <Button variant="outline" onClick={() => setOpenWithdraw(false)}>
+                Cancel
+              </Button>
+              <Button 
+                onClick={handleWithdraw} 
+                disabled={!withdrawAmount || parseFloat(withdrawAmount) <= 0 || parseFloat(withdrawAmount) > userShares}
+              >
+                Withdraw
               </Button>
             </div>
           </DialogContent>

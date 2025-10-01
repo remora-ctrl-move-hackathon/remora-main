@@ -101,7 +101,7 @@ export class VaultService {
       function: `${CONTRACTS.VAULT.MODULE}::${CONTRACTS.VAULT.FUNCTIONS.WITHDRAW_FROM_VAULT}` as `${string}::${string}::${string}`,
       functionArguments: [
         vaultId.toString(),
-        sharesToRedeem.toString(),
+        formatAptAmount(sharesToRedeem).toString(),
         this.moduleOwner,
       ],
     });
