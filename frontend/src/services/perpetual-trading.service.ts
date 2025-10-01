@@ -335,10 +335,12 @@ export class PerpetualTradingService {
    * Validate trading parameters
    */
   validateTradeParams(params: OrderParams): { isValid: boolean; error?: string } {
-    if (params.size < MERKLE_CONFIG.DEFAULT_PARAMS.MIN_POSITION_SIZE) {
+    // Convert MIN_POSITION_SIZE from micro USDC to regular USDC for comparison
+    const minPositionSizeUSDC = MERKLE_CONFIG.DEFAULT_PARAMS.MIN_POSITION_SIZE / 1_000_000
+    if (params.size < minPositionSizeUSDC) {
       return {
         isValid: false,
-        error: `Position size must be at least ${MERKLE_CONFIG.DEFAULT_PARAMS.MIN_POSITION_SIZE / 1_000_000} USDC`
+        error: `Position size must be at least ${minPositionSizeUSDC} USDC`
       }
     }
 
