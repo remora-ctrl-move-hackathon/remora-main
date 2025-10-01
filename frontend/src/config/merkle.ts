@@ -16,12 +16,12 @@ export const MERKLE_CONFIG = {
     DOGE_USD: 'DOGE_USD',
   } as const,
 
-  // Default trading parameters
+  // Default trading parameters - following Merkle SDK patterns
   DEFAULT_PARAMS: {
     SLIPPAGE_TOLERANCE: 0.01, // 1%
-    MIN_POSITION_SIZE: 1_000_000, // 1 USDC in smallest units
+    MIN_POSITION_SIZE: 2, // 2 USDC minimum (following their docs: "start with just $2")
     DEFAULT_LEVERAGE: 2,
-    MAX_LEVERAGE: 100,
+    MAX_LEVERAGE: 150, // Up to 150x as per their documentation
   },
 
   // Risk management settings
@@ -52,18 +52,21 @@ export async function createMerkleClient(): Promise<MerkleClient> {
 
 /**
  * Format amount for Merkle Trade (converts to smallest units)
- * Following SDK example: sizeDelta: 300_000_000n (for $300)
+ * Following SDK patterns: amounts should be in USDC units with 6 decimals
+ * Example: 300 USDC -> 300_000_000n
  */
 export function formatMerkleAmount(amount: number): bigint {
-  // Merkle Trade uses 6 decimal places for USDC
-  // Example: $300 = 300_000_000n
+  // Merkle SDK expects USDC units (6 decimals)
+  // Example from docs: sizeDelta: 300_000_000n (300 USDC)
   return BigInt(Math.floor(amount * 1_000_000))
 }
 
 /**
  * Parse amount from Merkle Trade (converts from smallest units)
+ * Following SDK patterns: amounts are in USDC units with 6 decimals
  */
 export function parseMerkleAmount(amount: bigint | string | number): number {
+  // Convert from micro USDC to USDC
   if (typeof amount === 'bigint') {
     return Number(amount) / 1_000_000
   }
@@ -71,6 +74,20 @@ export function parseMerkleAmount(amount: bigint | string | number): number {
     return Number(amount) / 1_000_000
   }
   return amount / 1_000_000
+}
+
+/**
+ * Get minimum position size following Merkle patterns
+ */
+export function getMinPositionSize(): number {
+  return MERKLE_CONFIG.DEFAULT_PARAMS.MIN_POSITION_SIZE
+}
+
+/**
+ * Get collateral symbol - Merkle uses USDC
+ */
+export function getCollateralSymbol(): string {
+  return 'USDC'
 }
 
 /**

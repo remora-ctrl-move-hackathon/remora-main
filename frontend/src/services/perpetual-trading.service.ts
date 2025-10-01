@@ -4,6 +4,8 @@ import {
   createMerkleClient, 
   formatMerkleAmount, 
   parseMerkleAmount,
+  getMinPositionSize,
+  getCollateralSymbol,
   TradingPair,
   MERKLE_CONFIG
 } from '@/config/merkle'
@@ -82,11 +84,12 @@ export class PerpetualTradingService {
     const client = await this.ensureInitialized()
     
     try {
+      // Following the exact SDK pattern from documentation
       const payload = await client.payloads.placeMarketOrder({
         pair: params.pair,
         userAddress: userAddress as `0x${string}`,
-        sizeDelta: formatMerkleAmount(params.size),
-        collateralDelta: formatMerkleAmount(params.collateral),
+        sizeDelta: formatMerkleAmount(params.size), // e.g., 300 USDC -> 300_000_000n
+        collateralDelta: formatMerkleAmount(params.collateral), // e.g., 5 USDC -> 5_000_000n
         isLong: params.isLong,
         isIncrease: params.isIncrease,
       })
@@ -113,7 +116,7 @@ export class PerpetualTradingService {
         userAddress: userAddress as `0x${string}`,
         sizeDelta: formatMerkleAmount(params.size),
         collateralDelta: formatMerkleAmount(params.collateral),
-        price: formatMerkleAmount(params.triggerPrice),
+        price: formatMerkleAmount(params.triggerPrice), // Price in USDC units
         isLong: params.isLong,
         isIncrease: params.isIncrease,
       })
@@ -335,12 +338,13 @@ export class PerpetualTradingService {
    * Validate trading parameters
    */
   validateTradeParams(params: OrderParams): { isValid: boolean; error?: string } {
-    // Convert MIN_POSITION_SIZE from micro USDC to regular USDC for comparison
-    const minPositionSizeUSDC = MERKLE_CONFIG.DEFAULT_PARAMS.MIN_POSITION_SIZE / 1_000_000
-    if (params.size < minPositionSizeUSDC) {
+    const minPositionSize = getMinPositionSize()
+    const collateralSymbol = getCollateralSymbol()
+    
+    if (params.size < minPositionSize) {
       return {
         isValid: false,
-        error: `Position size must be at least ${minPositionSizeUSDC} USDC`
+        error: `Position size must be at least ${minPositionSize} ${collateralSymbol}`
       }
     }
 
