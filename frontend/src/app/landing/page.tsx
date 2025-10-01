@@ -1,6 +1,7 @@
 "use client"
 
 import Link from "next/link"
+import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { ArrowRight, Zap, Shield, TrendingUp, Globe } from "lucide-react"
 
@@ -24,7 +25,7 @@ export default function Landing() {
             </div>
           </div>
         </header>
-        <div className="py-16">
+        <div className="py-32">
           <div className="max-w-7xl mx-auto px-8">
             <div className="max-w-4xl text-white">
               <h1 className="text-6xl md:text-8xl font-extralight mb-8 leading-tight">
@@ -37,7 +38,7 @@ export default function Landing() {
                 Work anywhere without worrying about outdated financial systems.
               </p>
               
-              <div className="flex gap-4 mb-12">
+              <div className="flex gap-4 mb-16">
                 <Link href="/">
                   <Button 
                     size="lg"
@@ -58,7 +59,7 @@ export default function Landing() {
               </div>
 
               {/* Key Features Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-8 pb-20">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-8 pb-32">
                 <div className="p-6 bg-white/10 rounded-xl backdrop-blur-sm">
                   <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center mb-4">
                     <TrendingUp className="h-6 w-6 text-white" />
@@ -116,10 +117,14 @@ export default function Landing() {
               </Link>
             </div>
             
-            <div className="relative">
-              <div className="aspect-square bg-teal-800/5 rounded-2xl flex items-center justify-center">
-                <Shield className="h-32 w-32 text-teal-800/20" />
-              </div>
+            <div className="relative flex items-center justify-center">
+              <Image 
+                src="/Satoshi_Complete/LockImage.png" 
+                alt="Security" 
+                width={400} 
+                height={400}
+                className="object-contain"
+              />
             </div>
           </div>
         </div>
@@ -129,10 +134,14 @@ export default function Landing() {
       <section className="py-32 bg-teal-800/5">
         <div className="max-w-7xl mx-auto px-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-            <div className="order-2 lg:order-1">
-              <div className="aspect-square bg-white rounded-2xl flex items-center justify-center">
-                <TrendingUp className="h-32 w-32 text-teal-800/20" />
-              </div>
+            <div className="order-2 lg:order-1 flex items-center justify-center">
+              <Image 
+                src="/Satoshi_Complete/Trading.png" 
+                alt="Trading" 
+                width={400} 
+                height={400}
+                className="object-contain"
+              />
             </div>
             
             <div className="order-1 lg:order-2">
@@ -190,10 +199,14 @@ export default function Landing() {
               </Link>
             </div>
             
-            <div className="relative">
-              <div className="aspect-square bg-teal-800/5 rounded-2xl flex items-center justify-center">
-                <Globe className="h-32 w-32 text-teal-800/20" />
-              </div>
+            <div className="relative flex items-center justify-center">
+              <Image 
+                src="/Satoshi_Complete/Payment.png" 
+                alt="Global Remittance" 
+                width={400} 
+                height={400}
+                className="object-contain"
+              />
             </div>
           </div>
         </div>
