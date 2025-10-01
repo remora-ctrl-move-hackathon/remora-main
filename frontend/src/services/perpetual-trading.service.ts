@@ -266,9 +266,16 @@ export class PerpetualTradingService {
     
     try {
       const summary = await client.api.getSummary()
+      
+      // Add safety checks
+      if (!summary || !summary.pairs) {
+        console.warn('Summary or pairs data not available')
+        return 50000
+      }
+      
       const pairData = summary.pairs.find(p => p.id === pair || p.symbol === pair)
       
-      if (pairData) {
+      if (pairData && summary.prices) {
         // Look for price in summary.prices
         const priceData = summary.prices.find(p => p.id === pairData.id)
         if (priceData && priceData.price) {
@@ -276,8 +283,14 @@ export class PerpetualTradingService {
         }
       }
       
-      // Fallback: return placeholder price
-      return 50000
+      // Fallback: return placeholder price based on pair
+      switch (pair) {
+        case 'BTC_USD': return 50000
+        case 'ETH_USD': return 3000
+        case 'APT_USD': return 10
+        case 'SOL_USD': return 100
+        default: return 1000
+      }
     } catch (error) {
       console.error('Error fetching market price:', error)
       return 0
