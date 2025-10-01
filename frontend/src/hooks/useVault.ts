@@ -55,7 +55,6 @@ export function useVault() {
       const payload = await vaultService.createVault(params);
       
       const response = await signAndSubmitTransaction({
-        sender: account.address,
         data: payload,
       });
 
@@ -88,7 +87,6 @@ export function useVault() {
       const payload = await vaultService.depositToVault(vaultId, amount);
       
       const response = await signAndSubmitTransaction({
-        sender: account.address,
         data: payload,
       });
 
@@ -121,7 +119,6 @@ export function useVault() {
       const payload = await vaultService.withdrawFromVault(vaultId, shares);
       
       const response = await signAndSubmitTransaction({
-        sender: account.address,
         data: payload,
       });
 
@@ -154,7 +151,6 @@ export function useVault() {
       const payload = await vaultService.executeTrade(params);
       
       const response = await signAndSubmitTransaction({
-        sender: account.address,
         data: payload,
       });
 
@@ -187,7 +183,6 @@ export function useVault() {
       const payload = await vaultService.pauseVault(vaultId);
       
       const response = await signAndSubmitTransaction({
-        sender: account.address,
         data: payload,
       });
 
@@ -220,7 +215,6 @@ export function useVault() {
       const payload = await vaultService.resumeVault(vaultId);
       
       const response = await signAndSubmitTransaction({
-        sender: account.address,
         data: payload,
       });
 

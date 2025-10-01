@@ -55,7 +55,7 @@ export class VaultService {
    */
   async initialize(): Promise<InputGenerateTransactionPayloadData> {
     return aptosClient.buildTransaction({
-      function: `${CONTRACTS.VAULT.MODULE}::${CONTRACTS.VAULT.FUNCTIONS.INITIALIZE}`,
+      function: `${CONTRACTS.VAULT.MODULE}::${CONTRACTS.VAULT.FUNCTIONS.INITIALIZE}` as `${string}::${string}::${string}`,
       functionArguments: [],
     });
   }
@@ -65,7 +65,7 @@ export class VaultService {
    */
   async createVault(params: CreateVaultParams): Promise<InputGenerateTransactionPayloadData> {
     return aptosClient.buildTransaction({
-      function: `${CONTRACTS.VAULT.MODULE}::${CONTRACTS.VAULT.FUNCTIONS.CREATE_VAULT}`,
+      function: `${CONTRACTS.VAULT.MODULE}::${CONTRACTS.VAULT.FUNCTIONS.CREATE_VAULT}` as `${string}::${string}::${string}`,
       functionArguments: [
         params.name,
         params.description,
@@ -84,7 +84,7 @@ export class VaultService {
    */
   async depositToVault(vaultId: number, amount: number): Promise<InputGenerateTransactionPayloadData> {
     return aptosClient.buildTransaction({
-      function: `${CONTRACTS.VAULT.MODULE}::${CONTRACTS.VAULT.FUNCTIONS.DEPOSIT_TO_VAULT}`,
+      function: `${CONTRACTS.VAULT.MODULE}::${CONTRACTS.VAULT.FUNCTIONS.DEPOSIT_TO_VAULT}` as `${string}::${string}::${string}`,
       functionArguments: [
         vaultId.toString(),
         formatAptAmount(amount).toString(),
@@ -98,7 +98,7 @@ export class VaultService {
    */
   async withdrawFromVault(vaultId: number, sharesToRedeem: number): Promise<InputGenerateTransactionPayloadData> {
     return aptosClient.buildTransaction({
-      function: `${CONTRACTS.VAULT.MODULE}::${CONTRACTS.VAULT.FUNCTIONS.WITHDRAW_FROM_VAULT}`,
+      function: `${CONTRACTS.VAULT.MODULE}::${CONTRACTS.VAULT.FUNCTIONS.WITHDRAW_FROM_VAULT}` as `${string}::${string}::${string}`,
       functionArguments: [
         vaultId.toString(),
         sharesToRedeem.toString(),
@@ -112,7 +112,7 @@ export class VaultService {
    */
   async executeTrade(params: ExecuteTradeParams): Promise<InputGenerateTransactionPayloadData> {
     return aptosClient.buildTransaction({
-      function: `${CONTRACTS.VAULT.MODULE}::${CONTRACTS.VAULT.FUNCTIONS.EXECUTE_TRADE}`,
+      function: `${CONTRACTS.VAULT.MODULE}::${CONTRACTS.VAULT.FUNCTIONS.EXECUTE_TRADE}` as `${string}::${string}::${string}`,
       functionArguments: [
         params.vaultId.toString(),
         params.action,
@@ -131,7 +131,7 @@ export class VaultService {
    */
   async pauseVault(vaultId: number): Promise<InputGenerateTransactionPayloadData> {
     return aptosClient.buildTransaction({
-      function: `${CONTRACTS.VAULT.MODULE}::${CONTRACTS.VAULT.FUNCTIONS.PAUSE_VAULT}`,
+      function: `${CONTRACTS.VAULT.MODULE}::${CONTRACTS.VAULT.FUNCTIONS.PAUSE_VAULT}` as `${string}::${string}::${string}`,
       functionArguments: [
         vaultId.toString(),
         this.moduleOwner,
@@ -144,7 +144,7 @@ export class VaultService {
    */
   async resumeVault(vaultId: number): Promise<InputGenerateTransactionPayloadData> {
     return aptosClient.buildTransaction({
-      function: `${CONTRACTS.VAULT.MODULE}::${CONTRACTS.VAULT.FUNCTIONS.RESUME_VAULT}`,
+      function: `${CONTRACTS.VAULT.MODULE}::${CONTRACTS.VAULT.FUNCTIONS.RESUME_VAULT}` as `${string}::${string}::${string}`,
       functionArguments: [
         vaultId.toString(),
         this.moduleOwner,
@@ -157,7 +157,7 @@ export class VaultService {
    */
   async collectFees(vaultId: number): Promise<InputGenerateTransactionPayloadData> {
     return aptosClient.buildTransaction({
-      function: `${CONTRACTS.VAULT.MODULE}::${CONTRACTS.VAULT.FUNCTIONS.COLLECT_FEES}`,
+      function: `${CONTRACTS.VAULT.MODULE}::${CONTRACTS.VAULT.FUNCTIONS.COLLECT_FEES}` as `${string}::${string}::${string}`,
       functionArguments: [
         vaultId.toString(),
         this.moduleOwner,
@@ -171,8 +171,8 @@ export class VaultService {
   async getVaultInfo(vaultId: number): Promise<Vault | null> {
     try {
       const result = await aptosClient.viewFunction({
-        function: `${CONTRACTS.VAULT.MODULE}::${CONTRACTS.VAULT.VIEWS.GET_VAULT_INFO}`,
-        functionArguments: [vaultId, this.moduleOwner],
+        function: `${CONTRACTS.VAULT.MODULE}::${CONTRACTS.VAULT.VIEWS.GET_VAULT_INFO}` as `${string}::${string}::${string}`,
+        functionArguments: [vaultId.toString(), this.moduleOwner],
       });
 
       if (!result) return null;
@@ -207,8 +207,8 @@ export class VaultService {
   async getVaultBalance(vaultId: number): Promise<number> {
     try {
       const result = await aptosClient.viewFunction({
-        function: `${CONTRACTS.VAULT.MODULE}::${CONTRACTS.VAULT.VIEWS.GET_VAULT_BALANCE}`,
-        functionArguments: [vaultId, this.moduleOwner],
+        function: `${CONTRACTS.VAULT.MODULE}::${CONTRACTS.VAULT.VIEWS.GET_VAULT_BALANCE}` as `${string}::${string}::${string}`,
+        functionArguments: [vaultId.toString(), this.moduleOwner],
       });
 
       return parseAptAmount(result);
@@ -224,8 +224,8 @@ export class VaultService {
   async getInvestorShares(vaultId: number, investor: string): Promise<number> {
     try {
       const result = await aptosClient.viewFunction({
-        function: `${CONTRACTS.VAULT.MODULE}::${CONTRACTS.VAULT.VIEWS.GET_INVESTOR_SHARES}`,
-        functionArguments: [vaultId, investor, this.moduleOwner],
+        function: `${CONTRACTS.VAULT.MODULE}::${CONTRACTS.VAULT.VIEWS.GET_INVESTOR_SHARES}` as `${string}::${string}::${string}`,
+        functionArguments: [vaultId.toString(), investor, this.moduleOwner],
       });
 
       return parseAptAmount(result);
@@ -241,7 +241,7 @@ export class VaultService {
   async getUserVaults(user: string): Promise<number[]> {
     try {
       const result = await aptosClient.viewFunction({
-        function: `${CONTRACTS.VAULT.MODULE}::${CONTRACTS.VAULT.VIEWS.GET_USER_VAULTS}`,
+        function: `${CONTRACTS.VAULT.MODULE}::${CONTRACTS.VAULT.VIEWS.GET_USER_VAULTS}` as `${string}::${string}::${string}`,
         functionArguments: [user, this.moduleOwner],
       });
 
@@ -258,7 +258,7 @@ export class VaultService {
   async getManagerVaults(manager: string): Promise<number[]> {
     try {
       const result = await aptosClient.viewFunction({
-        function: `${CONTRACTS.VAULT.MODULE}::${CONTRACTS.VAULT.VIEWS.GET_MANAGER_VAULTS}`,
+        function: `${CONTRACTS.VAULT.MODULE}::${CONTRACTS.VAULT.VIEWS.GET_MANAGER_VAULTS}` as `${string}::${string}::${string}`,
         functionArguments: [manager, this.moduleOwner],
       });
 
@@ -275,7 +275,7 @@ export class VaultService {
   async getTotalValueLocked(): Promise<number> {
     try {
       const result = await aptosClient.viewFunction({
-        function: `${CONTRACTS.VAULT.MODULE}::${CONTRACTS.VAULT.VIEWS.GET_TOTAL_VALUE_LOCKED}`,
+        function: `${CONTRACTS.VAULT.MODULE}::${CONTRACTS.VAULT.VIEWS.GET_TOTAL_VALUE_LOCKED}` as `${string}::${string}::${string}`,
         functionArguments: [this.moduleOwner],
       });
 
@@ -292,8 +292,8 @@ export class VaultService {
   async getVaultPerformance(vaultId: number): Promise<{ totalValue: number; pnl: number; isPositive: boolean }> {
     try {
       const result = await aptosClient.viewFunction({
-        function: `${CONTRACTS.VAULT.MODULE}::${CONTRACTS.VAULT.VIEWS.GET_VAULT_PERFORMANCE}`,
-        functionArguments: [vaultId, this.moduleOwner],
+        function: `${CONTRACTS.VAULT.MODULE}::${CONTRACTS.VAULT.VIEWS.GET_VAULT_PERFORMANCE}` as `${string}::${string}::${string}`,
+        functionArguments: [vaultId.toString(), this.moduleOwner],
       });
 
       return {

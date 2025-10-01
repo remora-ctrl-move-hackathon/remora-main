@@ -1,15 +1,39 @@
 import { Aptos, AptosConfig, Network } from "@aptos-labs/ts-sdk";
 
 // Contract addresses - Update these after deployment
-export const MODULE_ADDRESS = process.env.NEXT_PUBLIC_MODULE_ADDRESS || "0xCAFE";
+export const MODULE_ADDRESS = "0xe95e7998587e360db1185b3aa020dd07d77429ec340bbcd2bc8bc455e71d0e1a";
 export const MODULE_NAME = "remora";
 
-// Initialize Aptos client
+// Network configuration
+const getNetwork = (): Network => {
+  const network = process.env.NEXT_PUBLIC_APTOS_NETWORK || "testnet";
+  switch (network.toLowerCase()) {
+    case "mainnet":
+      return Network.MAINNET;
+    case "testnet":
+      return Network.TESTNET;
+    case "devnet":
+      return Network.DEVNET;
+    default:
+      return Network.TESTNET;
+  }
+};
+
+// Initialize Aptos client with API key
 const config = new AptosConfig({
-  network: Network.TESTNET,
+  network: getNetwork(),
+  ...(process.env.NEXT_PUBLIC_APTOS_API_KEY && {
+    clientConfig: {
+      API_KEY: process.env.NEXT_PUBLIC_APTOS_API_KEY,
+    },
+  }),
 });
 
 export const aptos = new Aptos(config);
+
+// Feature flags
+export const TESTNET_MODE = process.env.NEXT_PUBLIC_ENABLE_TESTNET_MODE === "true";
+export const FAUCET_ENABLED = process.env.NEXT_PUBLIC_ENABLE_FAUCET === "true";
 
 // Contract function names
 export const CONTRACTS = {

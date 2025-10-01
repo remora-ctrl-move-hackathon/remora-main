@@ -1,0 +1,25 @@
+{
+  "network": "testnet",
+  "deployed_at": "2025-09-30T13:52:00Z",
+  "module_address": "0xe95e7998587e360db1185b3aa020dd07d77429ec340bbcd2bc8bc455e71d0e1a",
+  "profile": "remora-testnet",
+  "deployment_tx": "0x6ee122a07d4a480137efe649b105c1f53ed98b1890dedd7b012ec6113d1961c7",
+  "modules": {
+    "streaming": {
+      "address": "0xe95e7998587e360db1185b3aa020dd07d77429ec340bbcd2bc8bc455e71d0e1a::streaming",
+      "initialized": true,
+      "init_tx": "0x63937a00171a845085bb8d61c2d3036de2b4daf586f410b8eca4c7354e3bbca9"
+    },
+    "vault": {
+      "address": "0xe95e7998587e360db1185b3aa020dd07d77429ec340bbcd2bc8bc455e71d0e1a::vault",
+      "initialized": true,
+      "init_tx": "0x554c39d3f5045512f13776e7df3cde73e967d025830683fd7fb06cd5d457cdd2"
+    },
+    "offramp": {
+      "address": "0xe95e7998587e360db1185b3aa020dd07d77429ec340bbcd2bc8bc455e71d0e1a::offramp",
+      "initialized": true,
+      "init_tx": "0x4a3018eaaa7beb0f5be570bb0e7917fb9615b66a4d88e60764a9fd6c59a49944"
+    }
+  },
+  "explorer_url": "https://explorer.aptoslabs.com/account/0xe95e7998587e360db1185b3aa020dd07d77429ec340bbcd2bc8bc455e71d0e1a?network=testnet"
+}

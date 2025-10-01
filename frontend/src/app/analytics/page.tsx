@@ -108,7 +108,7 @@ export default function Analytics() {
         {/* Header */}
         <div className="flex items-center justify-between mb-10">
           <div>
-            <h1 className="text-3xl font-extralight text-gray-900">Analytics</h1>
+            <h1 className="text-3xl font-light text-gray-900">Analytics</h1>
             <p className="text-sm text-gray-500 font-light mt-1">Protocol metrics & portfolio insights</p>
           </div>
           <Badge variant="outline" className="text-xs border-primary/20 text-primary font-light">
@@ -291,29 +291,6 @@ export default function Analytics() {
           </Card>
         </div>
 
-        {/* Quick Actions */}
-        <div className="grid grid-cols-2 gap-4">
-          <Link href="/streams">
-            <Card className="bg-white border-border/50 hover:border-primary/50 hover:shadow-lg transition-all cursor-pointer group">
-              <CardContent className="pt-6 pb-6 text-center">
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform">
-                  <Zap className="h-6 w-6 text-primary" strokeWidth={1.5} />
-                </div>
-                <p className="text-sm font-light text-gray-900">Create Stream</p>
-              </CardContent>
-            </Card>
-          </Link>
-          <Link href="/vault">
-            <Card className="bg-white border-border/50 hover:border-primary/50 hover:shadow-lg transition-all cursor-pointer group">
-              <CardContent className="pt-6 pb-6 text-center">
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform">
-                  <TrendingUp className="h-6 w-6 text-primary" strokeWidth={1.5} />
-                </div>
-                <p className="text-sm font-light text-gray-900">Manage Vaults</p>
-              </CardContent>
-            </Card>
-          </Link>
-        </div>
       </div>
     </div>
   )

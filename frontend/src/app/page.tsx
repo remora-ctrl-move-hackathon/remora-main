@@ -1,170 +1,133 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import { useWallet } from "@aptos-labs/wallet-adapter-react"
 import { 
-  TrendingUp, 
-  ArrowUpRight, 
-  Clock, 
   Users, 
   Building2,
   Globe2,
   Landmark,
-  BarChart3,
-  Wallet,
-  ArrowRightLeft,
-  Shield,
-  Activity,
-  Zap
+  Loader2
 } from "lucide-react"
 import { Card } from "@/components/ui/card"
 import { Header } from "@/components/ui/header"
 import { Footer } from "@/components/ui/footer"
 import { Badge } from "@/components/ui/badge"
+import { useStreaming } from "@/hooks/useStreaming"
+import { STREAM_STATUS } from "@/config/aptos"
 import Link from "next/link"
+
+interface DisplayStream {
+  id: number
+  recipient: string
+  address: string
+  icon: any
+  amount: string
+  currency: string
+  totalAmount: string
+  rate: string
+  status: string
+  progress: number
+  endDate: string
+}
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState("streams")
+  const { account } = useWallet()
+  const { 
+    sentStreams, 
+    receivedStreams, 
+    loading, 
+    fetchUserStreams
+  } = useStreaming()
 
-  const stats = {
-    totalVolume: "$892M",
-    activeStreams: "248",
-    totalRemittance: "$644M"
+  // Convert blockchain stream data to display format
+  const formatStreamForDisplay = (stream: any, index: number): DisplayStream => {
+    const icons = [Building2, Users, Globe2, Landmark]
+    const getIcon = () => icons[index % icons.length]
+    
+    const getStatusString = (status: number): string => {
+      switch (status) {
+        case STREAM_STATUS.ACTIVE: return "active"
+        case STREAM_STATUS.PAUSED: return "paused"
+        case STREAM_STATUS.CANCELLED: return "cancelled"
+        case STREAM_STATUS.COMPLETED: return "completed"
+        default: return "unknown"
+      }
+    }
+
+    const formatAddress = (addr: string): string => {
+      if (addr.length < 12) return addr
+      return `${addr.slice(0, 8)}...${addr.slice(-6)}`
+    }
+
+    const formatDate = (timestamp: number): string => {
+      const date = new Date(timestamp * 1000)
+      return date.toLocaleDateString('en-GB', { 
+        day: '2-digit', 
+        month: '2-digit', 
+        year: 'numeric' 
+      })
+    }
+
+    const calculateProgress = (): number => {
+      const now = Date.now() / 1000
+      const duration = stream.endTime - stream.startTime
+      const elapsed = Math.min(now - stream.startTime, duration)
+      return Math.max(0, Math.min(100, (elapsed / duration) * 100))
+    }
+
+    return {
+      id: stream.streamId,
+      recipient: stream.streamName || `Stream ${stream.streamId}`,
+      address: formatAddress(stream.receiver),
+      icon: getIcon(),
+      amount: stream.withdrawnAmount.toFixed(4),
+      currency: "APT",
+      totalAmount: stream.totalAmount.toFixed(4),
+      rate: `${(stream.amountPerSecond * 86400).toFixed(4)} APT/day`,
+      status: getStatusString(stream.status),
+      progress: calculateProgress(),
+      endDate: formatDate(stream.endTime)
+    }
   }
 
-  const streams = [
-    { 
-      id: 1,
-      recipient: "Team Payroll",
-      icon: Building2,
-      amount: "86.4M",
-      currency: "USDC",
-      value: "$286M",
-      rate: "$3,500/mo",
-      status: "active",
-      progress: 78,
-      apy: "3.36%"
-    },
-    {
-      id: 2,
-      recipient: "Contractor Pool",
-      icon: Users,
-      amount: "74.5M",
-      currency: "USDT",
-      value: "$247M",
-      rate: "$15,000/wk",
-      status: "active", 
-      progress: 70,
-      apy: "3.58%"
-    },
-    {
-      id: 3,
-      recipient: "Remote Workers",
-      icon: Globe2,
-      amount: "65.2M",
-      currency: "USDC",
-      value: "$65.2M",
-      rate: "$8,200/mo",
-      status: "active",
-      progress: 77,
-      apy: "10.61%"
-    },
-    {
-      id: 4,
-      recipient: "DAO Treasury",
-      icon: Landmark,
-      amount: "7.56M",
-      currency: "suiUSDT",
-      value: "$7.56M",
-      rate: "$50,000/mo",
-      status: "active",
-      progress: 77,
-      apy: "27.27%"
-    },
-    {
-      id: 5,
-      recipient: "Marketing Fund",
-      icon: BarChart3,
-      amount: "7.37M",
-      currency: "AUSD",
-      value: "$7.37M",
-      rate: "$25,000/wk",
-      status: "paused",
-      progress: 0,
-      apy: "7.65%"
-    }
-  ]
+  // Calculate stats from real blockchain data
+  const calculateStats = () => {
+    const totalStreamingOut = sentStreams.reduce((sum, stream) => sum + stream.totalAmount, 0)
+    const activeStreamCount = sentStreams.filter(stream => stream.status === STREAM_STATUS.ACTIVE).length
+    const availableToWithdraw = receivedStreams.reduce((sum, stream) => {
+      // This would need to be calculated with withdrawable amounts
+      return sum + (stream.totalAmount - stream.withdrawnAmount)
+    }, 0)
 
-  const remittances = [
-    {
-      id: 1,
-      corridor: "US → Nigeria",
-      fromIcon: Wallet,
-      toIcon: Wallet,
-      volume: "453M",
-      currency: "NGN",
-      value: "$50.7M",
-      transactions: "1.8K",
-      fee: "0.02%",
-      speed: "2 min"
-    },
-    {
-      id: 2,
-      corridor: "UK → India",
-      fromIcon: Wallet,
-      toIcon: Wallet,
-      volume: "221M",
-      currency: "INR",
-      value: "$24.7M",
-      transactions: "1.85K",
-      fee: "0.04%",
-      speed: "4 min"
-    },
-    {
-      id: 3,
-      corridor: "US → Mexico",
-      fromIcon: Wallet,
-      toIcon: Wallet,
-      volume: "8.2M",
-      currency: "MXN",
-      value: "$37.8M",
-      transactions: "401",
-      fee: "0.11%",
-      speed: "5 min"
+    return {
+      totalVolume: `${totalStreamingOut.toFixed(4)} APT`,
+      activeStreams: activeStreamCount.toString(),
+      totalRemittance: `${availableToWithdraw.toFixed(4)} APT`
     }
-  ]
+  }
 
-  const vaults = [
-    {
-      id: 1,
-      name: "Alpha Strategy",
-      manager: "CryptoWhale",
-      icon: TrendingUp,
-      tvl: "$16.4M",
-      apy: "7.68%",
-      risk: "Low",
-      investors: 286
-    },
-    {
-      id: 2,
-      name: "DeFi Yield Plus",
-      manager: "YieldMaster",
-      icon: Activity,
-      tvl: "$483K",
-      apy: "14.39%", 
-      risk: "Medium",
-      investors: 124
-    },
-    {
-      id: 3,
-      name: "Stable Growth",
-      manager: "SafeHands",
-      icon: Shield,
-      tvl: "$2.13M",
-      apy: "7.43%",
-      risk: "Low",
-      investors: 89
+  const stats = account ? calculateStats() : {
+    totalVolume: "0.0000 APT",
+    activeStreams: "0",
+    totalRemittance: "0.0000 APT"
+  }
+
+  // Format streams for display
+  const displayStreams = sentStreams.map((stream, index) => formatStreamForDisplay(stream, index))
+
+  // Refresh data periodically with reduced frequency
+  useEffect(() => {
+    if (account) {
+      const interval = setInterval(() => {
+        fetchUserStreams(false) // Don't force, respect cooldown
+      }, 60000) // Refresh every 60 seconds (reduced from 30)
+
+      return () => clearInterval(interval)
     }
-  ]
+  }, [account, fetchUserStreams])
+
 
   return (
     <div className="min-h-screen bg-white flex flex-col">
@@ -172,74 +135,82 @@ export default function Home() {
       
       <div className="flex-1">
         {/* Stats Header */}
-        <div className="bg-gradient-to-r from-white to-gray-50/50">
+        <div className="bg-teal-800">
           <div className="max-w-screen-xl mx-auto px-8 py-12">
             <div className="flex items-center justify-between mb-10">
-              <h1 className="text-base font-light text-gray-500 uppercase tracking-widest">MAIN MARKET</h1>
-              <Badge variant="outline" className="text-xs border-primary/20 text-primary font-light">
-                <div className="w-2 h-2 rounded-full bg-primary animate-pulse mr-2" />
+              <h1 className="text-base font-light text-slate-300 uppercase tracking-widest">MAIN MARKET</h1>
+              <Badge variant="outline" className="text-xs border-white/30 text-white font-light bg-white/10">
+                <div className="w-2 h-2 rounded-full bg-white animate-pulse mr-2" />
                 Live
               </Badge>
             </div>
             
             <div className="grid grid-cols-3 gap-12">
               <div>
-                <p className="text-xs text-gray-400 mb-3 uppercase tracking-wider font-light">Total Volume</p>
-                <p className="text-4xl font-extralight tracking-tight">{stats.totalVolume}</p>
+                <p className="text-xs text-slate-400 mb-3 uppercase tracking-wider font-light">Total Streaming Out</p>
+                <p className="text-4xl font-extralight tracking-tight text-white">{stats.totalVolume}</p>
               </div>
               <div>
-                <p className="text-xs text-gray-400 mb-3 uppercase tracking-wider font-light">Active Streams</p>
-                <p className="text-4xl font-extralight tracking-tight">{stats.activeStreams}</p>
+                <p className="text-xs text-slate-400 mb-3 uppercase tracking-wider font-light">Active Streams</p>
+                <p className="text-4xl font-extralight tracking-tight text-white">{stats.activeStreams}</p>
               </div>
               <div>
-                <p className="text-xs text-gray-400 mb-3 uppercase tracking-wider font-light">TVL</p>
-                <p className="text-4xl font-extralight tracking-tight">{stats.totalRemittance}</p>
+                <p className="text-xs text-slate-400 mb-3 uppercase tracking-wider font-light">Available to Withdraw</p>
+                <p className="text-4xl font-extralight tracking-tight text-white">{stats.totalRemittance}</p>
               </div>
             </div>
           </div>
         </div>
 
         {/* Tab Navigation */}
-        <div className="bg-white sticky top-16 z-10">
+        <div className="bg-teal-800 sticky top-16 z-10">
           <div className="max-w-screen-xl mx-auto px-8">
-            <div className="flex gap-12 border-b border-gray-100">
-              <button
-                onClick={() => setActiveTab("streams")}
-                className={`py-6 text-xs font-light border-b-2 transition-all uppercase tracking-wider ${
-                  activeTab === "streams" 
-                    ? "text-primary border-primary" 
-                    : "text-gray-400 border-transparent hover:text-gray-600"
-                }`}
-              >
-                Payment Streams
-              </button>
-              <button
-                onClick={() => setActiveTab("remittance")}
-                className={`py-6 text-xs font-light border-b-2 transition-all uppercase tracking-wider ${
-                  activeTab === "remittance"
-                    ? "text-primary border-primary"
-                    : "text-gray-400 border-transparent hover:text-gray-600"
-                }`}
-              >
-                Remittance Corridors
-              </button>
-              <button
-                onClick={() => setActiveTab("vaults")}
-                className={`py-6 text-xs font-light border-b-2 transition-all uppercase tracking-wider ${
-                  activeTab === "vaults"
-                    ? "text-primary border-primary"
-                    : "text-gray-400 border-transparent hover:text-gray-600"
-                }`}
-              >
-                Copy Trading Vaults
-              </button>
+            <div className="flex justify-between items-center border-b border-teal-700">
+              <div className="flex gap-12">
+                <button
+                  onClick={() => setActiveTab("streams")}
+                  className={`py-6 text-xs font-light border-b-2 transition-all uppercase tracking-wider ${
+                    activeTab === "streams" 
+                      ? "text-white border-white" 
+                      : "text-white/70 border-transparent hover:text-white"
+                  }`}
+                >
+                  Payment Streams
+                </button>
+                <button
+                  onClick={() => setActiveTab("history")}
+                  className={`py-6 text-xs font-light border-b-2 transition-all uppercase tracking-wider ${
+                    activeTab === "history"
+                      ? "text-white border-white"
+                      : "text-white/70 border-transparent hover:text-white"
+                  }`}
+                >
+                  History
+                </button>
+              </div>
+              {activeTab === "streams" && (
+                <Link href="/streams">
+                  <button className="bg-white text-teal-800 px-4 py-2 rounded-lg text-sm font-light hover:bg-gray-100 transition-colors uppercase tracking-wider">
+                    Create Stream
+                  </button>
+                </Link>
+              )}
             </div>
           </div>
         </div>
 
+
         {/* Content Tables */}
-        <div className="max-w-screen-xl mx-auto px-8 py-12">
-          {activeTab === "streams" && (
+        <div className="max-w-screen-xl mx-auto px-8 py-6">
+          {!account ? (
+            <div className="text-center py-12">
+              <p className="text-gray-500 mb-4">Connect your wallet to view your streams</p>
+            </div>
+          ) : loading ? (
+            <div className="flex justify-center py-12">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            </div>
+          ) : activeTab === "streams" ? (
             <div className="space-y-3">
               {/* Table Header */}
               <div className="grid grid-cols-12 gap-4 px-6 py-4 text-xs text-gray-400 uppercase tracking-wider font-light">
@@ -247,192 +218,139 @@ export default function Home() {
                 <div className="col-span-3 text-right">Amount</div>
                 <div className="col-span-2 text-right">Rate</div>
                 <div className="col-span-2 text-center">Progress</div>
-                <div className="col-span-1 text-right">APY</div>
+                <div className="col-span-1 text-right">Status</div>
               </div>
 
               {/* Table Rows */}
-              {streams.map((stream) => (
-                <Link href={`/streams/${stream.id}`} key={stream.id}>
-                  <Card className="bg-white border-gray-100 hover:border-primary/30 hover:shadow-lg transition-all cursor-pointer p-6 mb-3">
-                    <div className="grid grid-cols-12 gap-4 items-center">
-                      <div className="col-span-4 flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/5 to-primary/10 flex items-center justify-center">
-                          <stream.icon className="h-5 w-5 text-primary" strokeWidth={1.5} />
-                        </div>
-                        <div>
-                          <p className="text-sm font-normal text-gray-900">{stream.recipient}</p>
-                          <p className="text-xs text-gray-400 font-light">{stream.currency}</p>
-                        </div>
-                      </div>
-                      
-                      <div className="col-span-3 text-right">
-                        <p className="text-sm font-light text-gray-900">{stream.amount} {stream.currency}</p>
-                        <p className="text-xs text-gray-400 font-light">{stream.value}</p>
-                      </div>
-                      
-                      <div className="col-span-2 text-right">
-                        <p className="text-sm font-light text-gray-600">{stream.rate}</p>
-                      </div>
-                      
-                      <div className="col-span-2">
-                        <div className="flex items-center gap-3">
-                          <div className="flex-1 h-1 bg-gray-100 rounded-full overflow-hidden">
-                            <div 
-                              className="h-full bg-gradient-to-r from-primary to-primary/70 transition-all rounded-full"
-                              style={{ width: `${stream.progress}%` }}
-                            />
+              {displayStreams.length === 0 ? (
+                <div className="text-center py-8">
+                  <p className="text-gray-500">No streams found</p>
+                </div>
+              ) : (
+                displayStreams.map((stream) => (
+                  <Link href={`/streams/${stream.id}`} key={stream.id}>
+                    <Card className="bg-white border-gray-100 hover:border-primary/30 hover:shadow-lg transition-all cursor-pointer p-6 mb-3">
+                      <div className="grid grid-cols-12 gap-4 items-center">
+                        <div className="col-span-4 flex items-center gap-4">
+                          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/5 to-primary/10 flex items-center justify-center">
+                            <stream.icon className="h-5 w-5 text-primary" strokeWidth={1.5} />
                           </div>
-                          <span className="text-xs font-light text-gray-500">{stream.progress}%</span>
+                          <div>
+                            <p className="text-sm font-normal text-gray-900">{stream.recipient}</p>
+                            <p className="text-xs text-gray-400 font-light">{stream.address}</p>
+                          </div>
+                        </div>
+                        
+                        <div className="col-span-3 text-right">
+                          <p className="text-sm font-light text-gray-900">{stream.amount} of {stream.totalAmount} {stream.currency}</p>
+                          <p className="text-xs text-gray-400 font-light">Total Amount</p>
+                        </div>
+                        
+                        <div className="col-span-2 text-right">
+                          <p className="text-sm font-light text-gray-600">{stream.rate}</p>
+                        </div>
+                        
+                        <div className="col-span-2">
+                          <div className="flex items-center gap-3">
+                            <div className="flex-1 h-1 bg-gray-100 rounded-full overflow-hidden">
+                              <div 
+                                className="h-full bg-gradient-to-r from-primary to-primary/70 transition-all rounded-full"
+                                style={{ width: `${stream.progress}%` }}
+                              />
+                            </div>
+                            <span className="text-xs font-light text-gray-500">{stream.progress.toFixed(1)}%</span>
+                          </div>
+                        </div>
+                        
+                        <div className="col-span-1 text-right">
+                          <p className="text-xs text-gray-400 font-light">End: {stream.endDate}</p>
+                          {stream.status === "active" ? (
+                            <div className="text-xs text-green-600 mt-1">Active</div>
+                          ) : stream.status === "paused" ? (
+                            <div className="text-xs text-yellow-600 mt-1">Paused</div>
+                          ) : stream.status === "cancelled" ? (
+                            <div className="text-xs text-red-600 mt-1">Cancelled</div>
+                          ) : (
+                            <div className="text-xs text-blue-600 mt-1">Completed</div>
+                          )}
                         </div>
                       </div>
-                      
-                      <div className="col-span-1 text-right">
-                        <div className="flex items-center justify-end gap-1">
-                          <TrendingUp className="h-3 w-3 text-primary" strokeWidth={1.5} />
-                          <span className="text-sm font-light text-primary">{stream.apy}</span>
-                        </div>
-                        {stream.status === "active" ? (
-                          <div className="text-xs text-green-600 mt-1">Active</div>
-                        ) : (
-                          <div className="text-xs text-gray-400 mt-1">Paused</div>
-                        )}
-                      </div>
-                    </div>
-                  </Card>
-                </Link>
-              ))}
+                    </Card>
+                  </Link>
+                ))
+              )}
             </div>
-          )}
-
-          {activeTab === "remittance" && (
-            <div className="space-y-3">
-              {/* Table Header */}
-              <div className="grid grid-cols-12 gap-4 px-6 py-4 text-xs text-gray-400 uppercase tracking-wider font-light">
-                <div className="col-span-3">Corridor</div>
-                <div className="col-span-2 text-right">Volume</div>
-                <div className="col-span-2 text-right">Transactions</div>
-                <div className="col-span-2 text-center">Speed</div>
-                <div className="col-span-2 text-right">Fee</div>
-                <div className="col-span-1"></div>
+          ) : (
+            <div className="space-y-8">
+              {/* Sent Streams Section */}
+              <div>
+                <h3 className="text-lg font-light text-gray-900 mb-4">Sent Streams</h3>
+                <div className="space-y-3">
+                  {sentStreams.length === 0 ? (
+                    <div className="text-center py-8">
+                      <p className="text-gray-500">No sent streams found</p>
+                    </div>
+                  ) : (
+                    sentStreams.map((stream, index) => {
+                      const displayStream = formatStreamForDisplay(stream, index)
+                      return (
+                        <Card key={`sent-${stream.streamId}`} className="bg-white border-gray-100 p-6">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-4">
+                              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-red-50 to-red-100 flex items-center justify-center">
+                                <displayStream.icon className="h-5 w-5 text-red-600" strokeWidth={1.5} />
+                              </div>
+                              <div>
+                                <p className="text-sm font-normal text-gray-900">{displayStream.recipient}</p>
+                                <p className="text-xs text-gray-400 font-light">{displayStream.address}</p>
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <p className="text-sm font-light text-gray-900">{displayStream.totalAmount} {displayStream.currency}</p>
+                              <p className="text-xs text-gray-400 font-light">Sent</p>
+                            </div>
+                          </div>
+                        </Card>
+                      )
+                    })
+                  )}
+                </div>
               </div>
 
-              {/* Table Rows */}
-              {remittances.map((corridor) => (
-                <Link href="/remit" key={corridor.id}>
-                  <Card className="bg-white border-gray-100 hover:border-primary/30 hover:shadow-lg transition-all cursor-pointer p-6 mb-3">
-                    <div className="grid grid-cols-12 gap-4 items-center">
-                      <div className="col-span-3 flex items-center gap-4">
-                        <div className="flex items-center gap-2">
-                          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary/5 to-primary/10 flex items-center justify-center">
-                            <corridor.fromIcon className="h-4 w-4 text-primary" strokeWidth={1.5} />
-                          </div>
-                          <ArrowRightLeft className="h-3 w-3 text-gray-300" strokeWidth={1.5} />
-                          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-secondary/5 to-secondary/10 flex items-center justify-center">
-                            <corridor.toIcon className="h-4 w-4 text-secondary" strokeWidth={1.5} />
-                          </div>
-                        </div>
-                        <div>
-                          <p className="text-sm font-normal text-gray-900">{corridor.corridor}</p>
-                          <p className="text-xs text-gray-400 font-light">{corridor.currency}</p>
-                        </div>
-                      </div>
-                      
-                      <div className="col-span-2 text-right">
-                        <p className="text-sm font-light text-gray-900">{corridor.volume}</p>
-                        <p className="text-xs text-gray-400 font-light">{corridor.value}</p>
-                      </div>
-                      
-                      <div className="col-span-2 text-right">
-                        <p className="text-sm font-light text-gray-600">{corridor.transactions}</p>
-                        <p className="text-xs text-gray-400 font-light">this month</p>
-                      </div>
-                      
-                      <div className="col-span-2 text-center">
-                        <Badge variant="outline" className="text-xs font-light border-gray-200">
-                          <Zap className="h-3 w-3 mr-1" strokeWidth={1.5} />
-                          {corridor.speed}
-                        </Badge>
-                      </div>
-                      
-                      <div className="col-span-2 text-right">
-                        <p className="text-sm font-light text-primary">{corridor.fee}</p>
-                      </div>
-                      
-                      <div className="col-span-1 text-right">
-                        <ArrowUpRight className="h-4 w-4 text-gray-300" strokeWidth={1.5} />
-                      </div>
+              {/* Received Streams Section */}
+              <div>
+                <h3 className="text-lg font-light text-gray-900 mb-4">Received Streams</h3>
+                <div className="space-y-3">
+                  {receivedStreams.length === 0 ? (
+                    <div className="text-center py-8">
+                      <p className="text-gray-500">No received streams found</p>
                     </div>
-                  </Card>
-                </Link>
-              ))}
-            </div>
-          )}
-
-          {activeTab === "vaults" && (
-            <div className="space-y-3">
-              {/* Table Header */}
-              <div className="grid grid-cols-12 gap-4 px-6 py-4 text-xs text-gray-400 uppercase tracking-wider font-light">
-                <div className="col-span-3">Vault</div>
-                <div className="col-span-2 text-right">TVL</div>
-                <div className="col-span-2 text-right">APY</div>
-                <div className="col-span-2 text-center">Risk</div>
-                <div className="col-span-2 text-right">Investors</div>
-                <div className="col-span-1"></div>
+                  ) : (
+                    receivedStreams.map((stream, index) => {
+                      const displayStream = formatStreamForDisplay(stream, index)
+                      return (
+                        <Card key={`received-${stream.streamId}`} className="bg-white border-gray-100 p-6">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-4">
+                              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-green-50 to-green-100 flex items-center justify-center">
+                                <displayStream.icon className="h-5 w-5 text-green-600" strokeWidth={1.5} />
+                              </div>
+                              <div>
+                                <p className="text-sm font-normal text-gray-900">From {displayStream.recipient}</p>
+                                <p className="text-xs text-gray-400 font-light">{displayStream.address}</p>
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <p className="text-sm font-light text-gray-900">{displayStream.totalAmount} {displayStream.currency}</p>
+                              <p className="text-xs text-gray-400 font-light">Received</p>
+                            </div>
+                          </div>
+                        </Card>
+                      )
+                    })
+                  )}
+                </div>
               </div>
-
-              {/* Table Rows */}
-              {vaults.map((vault) => (
-                <Link href="/vault" key={vault.id}>
-                  <Card className="bg-white border-gray-100 hover:border-primary/30 hover:shadow-lg transition-all cursor-pointer p-6 mb-3">
-                    <div className="grid grid-cols-12 gap-4 items-center">
-                      <div className="col-span-3 flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/5 to-primary/10 flex items-center justify-center">
-                          <vault.icon className="h-5 w-5 text-primary" strokeWidth={1.5} />
-                        </div>
-                        <div>
-                          <p className="text-sm font-normal text-gray-900">{vault.name}</p>
-                          <p className="text-xs text-gray-400 font-light">by {vault.manager}</p>
-                        </div>
-                      </div>
-                      
-                      <div className="col-span-2 text-right">
-                        <p className="text-sm font-light text-gray-900">{vault.tvl}</p>
-                      </div>
-                      
-                      <div className="col-span-2 text-right">
-                        <div className="flex items-center justify-end gap-1">
-                          <TrendingUp className="h-3 w-3 text-primary" strokeWidth={1.5} />
-                          <span className="text-sm font-light text-primary">{vault.apy}</span>
-                        </div>
-                      </div>
-                      
-                      <div className="col-span-2 text-center">
-                        <Badge 
-                          variant="outline" 
-                          className={`text-xs font-light ${
-                            vault.risk === "Low" 
-                              ? "border-green-200 text-green-600 bg-green-50" 
-                              : "border-yellow-200 text-yellow-600 bg-yellow-50"
-                          }`}
-                        >
-                          {vault.risk}
-                        </Badge>
-                      </div>
-                      
-                      <div className="col-span-2 text-right">
-                        <div className="flex items-center justify-end gap-1">
-                          <Users className="h-3 w-3 text-gray-400" strokeWidth={1.5} />
-                          <span className="text-sm font-light text-gray-600">{vault.investors}</span>
-                        </div>
-                      </div>
-                      
-                      <div className="col-span-1 text-right">
-                        <ArrowUpRight className="h-4 w-4 text-gray-300" strokeWidth={1.5} />
-                      </div>
-                    </div>
-                  </Card>
-                </Link>
-              ))}
             </div>
           )}
         </div>
