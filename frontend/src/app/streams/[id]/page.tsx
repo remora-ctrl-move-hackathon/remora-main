@@ -1,34 +1,39 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { useWallet } from "@aptos-labs/wallet-adapter-react"
 import { Header } from "@/components/ui/header"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { ArrowLeft, TrendingUp, Building2, Users, Box, Building, BarChart3, Pause, Play, Wallet } from "lucide-react"
+import { ArrowLeft, TrendingUp, Building2, Users, Box, Building, BarChart3, Pause, Play, Wallet, Loader2, X } from "lucide-react"
 import Link from "next/link"
 import { useParams } from 'next/navigation'
+import { useStreaming } from "@/hooks/useStreaming"
+import { STREAM_STATUS } from "@/config/aptos"
+import { Stream } from "@/services/streaming.service"
+import toast from "react-hot-toast"
 
-// Stream data - in production this would come from your backend
-const streamsData = [
+// Fallback stream data for demo purposes
+const fallbackStreamsData = [
   { 
     id: 1,
-    recipient: "Team Payroll",
+    recipient: "Sole",
     icon: Building2,
-    amount: "86.4M",
-    currency: "USDC",
-    value: "$286M",
-    rate: "$3,500/mo",
+    amount: "0.00",
+    currency: "APT",
+    totalAmount: "0.01",
+    rate: "0.0000 APT/day",
     status: "active",
-    progress: 28,
-    apy: "3.36%",
+    progress: 0,
     details: {
-      totalStreamed: "$54.23",
-      totalAmount: "$500.00",
+      totalStreamed: "0.00 APT",
+      totalAmount: "0.01 APT",
+      remaining: "0.01 APT",
       startDate: "2024-01-15",
-      endDate: "2024-12-31",
+      endDate: "30/10/2025",
       nextPayment: "2024-02-01",
-      recipientAddress: "0x742d...8f9a"
+      recipientAddress: "0xdf8921...c2c568"
     }
   },
   { 
@@ -115,10 +120,188 @@ const streamsData = [
 
 export default function StreamDetails() {
   const params = useParams()
+  const { account } = useWallet()
   const streamId = parseInt(params.id as string)
-  const stream = streamsData.find(s => s.id === streamId) || streamsData[0]
+  const { 
+    sentStreams, 
+    receivedStreams, 
+    loading, 
+    pauseStream, 
+    resumeStream, 
+    withdrawFromStream, 
+    cancelStream,
+    streamingService 
+  } = useStreaming()
   
-  const [isPaused, setIsPaused] = useState(stream.status === "paused")
+  const [stream, setStream] = useState<Stream | null>(null)
+  const [withdrawableAmount, setWithdrawableAmount] = useState<number>(0)
+  const [isLoading, setIsLoading] = useState(true)
+  const [actionLoading, setActionLoading] = useState(false)
+
+  // Find stream from user's streams or fetch from blockchain
+  useEffect(() => {
+    const findStream = async () => {
+      if (!account) {
+        setIsLoading(false)
+        return
+      }
+
+      // First try to find in user's sent/received streams
+      let foundStream: Stream | null = sentStreams.find(s => s.streamId === streamId) || 
+                                      receivedStreams.find(s => s.streamId === streamId) || null
+
+      if (!foundStream && streamId) {
+        // If not found, try to fetch directly from blockchain
+        try {
+          foundStream = await streamingService.getStreamInfo(streamId)
+        } catch (error) {
+          console.error("Error fetching stream:", error)
+        }
+      }
+
+      setStream(foundStream || null)
+      
+      if (foundStream) {
+        // Get withdrawable amount
+        try {
+          const withdrawable = await streamingService.getWithdrawableAmount(streamId)
+          setWithdrawableAmount(withdrawable)
+        } catch (error) {
+          console.error("Error fetching withdrawable amount:", error)
+        }
+      }
+      
+      setIsLoading(false)
+    }
+
+    findStream()
+  }, [account, streamId, sentStreams, receivedStreams, streamingService])
+
+  const handlePauseResume = async () => {
+    if (!stream || !account) return
+    
+    try {
+      setActionLoading(true)
+      if (stream.status === STREAM_STATUS.ACTIVE) {
+        await pauseStream(streamId)
+        toast.success("Stream paused successfully")
+      } else if (stream.status === STREAM_STATUS.PAUSED) {
+        await resumeStream(streamId)
+        toast.success("Stream resumed successfully")
+      }
+    } catch (error) {
+      console.error("Error toggling stream:", error)
+    } finally {
+      setActionLoading(false)
+    }
+  }
+
+  const handleWithdraw = async () => {
+    if (!stream || !account) return
+    
+    try {
+      setActionLoading(true)
+      await withdrawFromStream(streamId)
+      toast.success("Withdrawal successful")
+    } catch (error) {
+      console.error("Error withdrawing:", error)
+    } finally {
+      setActionLoading(false)
+    }
+  }
+
+  const handleCancel = async () => {
+    if (!stream || !account) return
+    
+    try {
+      setActionLoading(true)
+      await cancelStream(streamId)
+      toast.success("Stream cancelled successfully")
+    } catch (error) {
+      console.error("Error cancelling stream:", error)
+    } finally {
+      setActionLoading(false)
+    }
+  }
+
+  // Format helpers
+  const formatAptAmount = (amount: number) => amount.toFixed(4)
+  const formatDate = (timestamp: number) => new Date(timestamp * 1000).toLocaleDateString()
+  const formatAddress = (addr: string) => `${addr.slice(0, 8)}...${addr.slice(-6)}`
+  
+  const calculateProgress = () => {
+    if (!stream) return 0
+    const now = Date.now() / 1000
+    const duration = stream.endTime - stream.startTime
+    const elapsed = Math.min(now - stream.startTime, duration)
+    return Math.max(0, Math.min(100, (elapsed / duration) * 100))
+  }
+
+  const getStatusLabel = (status: number) => {
+    switch (status) {
+      case STREAM_STATUS.ACTIVE: return "Active"
+      case STREAM_STATUS.PAUSED: return "Paused"
+      case STREAM_STATUS.CANCELLED: return "Cancelled"
+      case STREAM_STATUS.COMPLETED: return "Completed"
+      default: return "Unknown"
+    }
+  }
+
+  const getStatusColor = (status: number) => {
+    switch (status) {
+      case STREAM_STATUS.ACTIVE: return "bg-green-50 text-green-600"
+      case STREAM_STATUS.PAUSED: return "bg-yellow-50 text-yellow-600"
+      case STREAM_STATUS.CANCELLED: return "bg-red-50 text-red-600"
+      case STREAM_STATUS.COMPLETED: return "bg-blue-50 text-blue-600"
+      default: return "bg-gray-50 text-gray-600"
+    }
+  }
+
+  if (!account) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-white to-primary/5">
+        <Header />
+        <div className="max-w-screen-xl mx-auto px-8 py-12">
+          <div className="text-center">
+            <p className="text-gray-500 mb-4">Connect your wallet to view stream details</p>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-white to-primary/5">
+        <Header />
+        <div className="max-w-screen-xl mx-auto px-8 py-12">
+          <div className="flex justify-center">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  if (!stream) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-white to-primary/5">
+        <Header />
+        <div className="max-w-screen-xl mx-auto px-8 py-12">
+          <div className="text-center">
+            <p className="text-gray-500 mb-4">Stream not found</p>
+            <Link href="/">
+              <Button variant="outline">Back to Home</Button>
+            </Link>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  const progress = calculateProgress()
+  const isUserSender = stream.sender === account.address
+  const isUserReceiver = stream.receiver === account.address
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-white to-primary/5">
@@ -141,33 +324,33 @@ export default function StreamDetails() {
             <div className="flex items-start justify-between mb-6">
               <div className="flex items-center gap-4">
                 <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-primary/5 to-primary/10 flex items-center justify-center">
-                  <stream.icon className="h-6 w-6 text-primary" strokeWidth={1.5} />
+                  <Building2 className="h-6 w-6 text-primary" strokeWidth={1.5} />
                 </div>
                 <div>
-                  <h2 className="text-xl font-light text-gray-900">{stream.recipient}</h2>
-                  <p className="text-sm text-gray-500 font-light">Stream #{stream.id}</p>
+                  <h2 className="text-xl font-light text-gray-900">{stream.streamName || `Stream ${stream.streamId}`}</h2>
+                  <p className="text-sm text-gray-500 font-light">Stream #{stream.streamId}</p>
                 </div>
               </div>
-              <Badge className={`${isPaused ? 'bg-yellow-50 text-yellow-600' : 'bg-green-50 text-green-600'} border-0`}>
-                {isPaused ? 'Paused' : 'Active'}
+              <Badge className={`${getStatusColor(stream.status)} border-0`}>
+                {getStatusLabel(stream.status)}
               </Badge>
             </div>
 
             <div className="grid grid-cols-3 gap-6">
               <div>
                 <div className="text-sm text-gray-500 font-light mb-1">Total Amount</div>
-                <div className="text-2xl font-extralight text-gray-900">{stream.amount} {stream.currency}</div>
-                <div className="text-sm text-gray-400 font-light">{stream.value}</div>
+                <div className="text-2xl font-extralight text-gray-900">{formatAptAmount(stream.totalAmount)} APT</div>
+                <div className="text-sm text-gray-400 font-light">Streaming Amount</div>
               </div>
               <div>
                 <div className="text-sm text-gray-500 font-light mb-1">Streaming Rate</div>
-                <div className="text-2xl font-extralight text-gray-900">{stream.rate}</div>
+                <div className="text-2xl font-extralight text-gray-900">{formatAptAmount(stream.amountPerSecond * 86400)} APT/day</div>
               </div>
               <div>
-                <div className="text-sm text-gray-500 font-light mb-1">APY</div>
+                <div className="text-sm text-gray-500 font-light mb-1">Progress</div>
                 <div className="text-2xl font-extralight text-green-600 flex items-center gap-1">
                   <TrendingUp className="h-5 w-5" />
-                  {stream.apy}
+                  {progress.toFixed(1)}%
                 </div>
               </div>
             </div>
@@ -182,27 +365,30 @@ export default function StreamDetails() {
                 <div>
                   <div className="flex justify-between mb-2">
                     <span className="text-sm text-gray-500 font-light">Progress</span>
-                    <span className="text-sm font-light">{stream.progress}%</span>
+                    <span className="text-sm font-light">{progress.toFixed(1)}%</span>
                   </div>
                   <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
                     <div 
                       className="h-full bg-gradient-to-r from-primary to-primary/70 transition-all rounded-full"
-                      style={{ width: `${stream.progress}%` }}
+                      style={{ width: `${progress}%` }}
                     />
                   </div>
                 </div>
                 <div className="space-y-2">
                   <div className="flex justify-between">
                     <span className="text-sm text-gray-500 font-light">Streamed</span>
-                    <span className="text-sm font-light">{stream.details.totalStreamed}</span>
+                    <span className="text-sm font-light">{formatAptAmount(stream.withdrawnAmount)} APT</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-sm text-gray-500 font-light">Remaining</span>
-                    <span className="text-sm font-light">
-                      ${(parseFloat(stream.details.totalAmount.replace('$', '').replace(',', '')) - 
-                         parseFloat(stream.details.totalStreamed.replace('$', '').replace(',', ''))).toFixed(2)}
-                    </span>
+                    <span className="text-sm font-light">{formatAptAmount(stream.totalAmount - stream.withdrawnAmount)} APT</span>
                   </div>
+                  {isUserReceiver && (
+                    <div className="flex justify-between">
+                      <span className="text-sm text-gray-500 font-light">Available to Withdraw</span>
+                      <span className="text-sm font-light text-green-600">{formatAptAmount(withdrawableAmount)} APT</span>
+                    </div>
+                  )}
                 </div>
               </div>
             </CardContent>
@@ -213,20 +399,24 @@ export default function StreamDetails() {
               <h3 className="text-lg font-light mb-6">Stream Information</h3>
               <div className="space-y-3">
                 <div className="flex justify-between">
+                  <span className="text-sm text-gray-500 font-light">Sender</span>
+                  <span className="text-sm font-mono">{formatAddress(stream.sender)}</span>
+                </div>
+                <div className="flex justify-between">
                   <span className="text-sm text-gray-500 font-light">Recipient</span>
-                  <span className="text-sm font-mono">{stream.details.recipientAddress}</span>
+                  <span className="text-sm font-mono">{formatAddress(stream.receiver)}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-sm text-gray-500 font-light">Start Date</span>
-                  <span className="text-sm font-light">{stream.details.startDate}</span>
+                  <span className="text-sm font-light">{formatDate(stream.startTime)}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-sm text-gray-500 font-light">End Date</span>
-                  <span className="text-sm font-light">{stream.details.endDate}</span>
+                  <span className="text-sm font-light">{formatDate(stream.endTime)}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-sm text-gray-500 font-light">Next Payment</span>
-                  <span className="text-sm font-light">{stream.details.nextPayment}</span>
+                  <span className="text-sm text-gray-500 font-light">Last Withdrawal</span>
+                  <span className="text-sm font-light">{formatDate(stream.lastWithdrawalTime)}</span>
                 </div>
               </div>
             </CardContent>
@@ -234,30 +424,72 @@ export default function StreamDetails() {
         </div>
 
         <div className="flex gap-4">
-          <Button 
-            onClick={() => setIsPaused(!isPaused)}
-            className="flex-1 bg-primary hover:bg-primary/90 text-white font-light"
-          >
-            {isPaused ? <Play className="h-4 w-4 mr-2" /> : <Pause className="h-4 w-4 mr-2" />}
-            {isPaused ? 'Resume Stream' : 'Pause Stream'}
-          </Button>
-          <Button 
-            variant="outline" 
-            className="flex-1 border-primary/50 text-primary hover:bg-primary/5 font-light"
-          >
-            <Wallet className="h-4 w-4 mr-2" />
-            Withdraw Funds
-          </Button>
-          <Link href="/remit" className="flex-1">
-            <Button variant="outline" className="w-full border-border/50 hover:bg-gray-50 font-light">
-              Route to Bill Pay
+          {/* Withdraw Button - Only show for receiver with withdrawable amount */}
+          {isUserReceiver && withdrawableAmount > 0 && (
+            <Button 
+              onClick={handleWithdraw}
+              disabled={actionLoading}
+              className="flex-1 bg-primary hover:bg-primary/90 text-white font-light"
+            >
+              {actionLoading ? (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              ) : (
+                <Wallet className="h-4 w-4 mr-2" />
+              )}
+              Withdraw Funds
             </Button>
-          </Link>
-          <Link href="/vault" className="flex-1">
-            <Button variant="outline" className="w-full border-border/50 hover:bg-gray-50 font-light">
-              Move to Vault
+          )}
+          
+          {/* Pause Button - Only show for sender with active streams */}
+          {isUserSender && stream.status === STREAM_STATUS.ACTIVE && (
+            <Button 
+              onClick={handlePauseResume}
+              disabled={actionLoading}
+              variant="outline" 
+              className="flex-1 border-border/50 hover:bg-gray-50 font-light"
+            >
+              {actionLoading ? (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              ) : (
+                <Pause className="h-4 w-4 mr-2" />
+              )}
+              Pause
             </Button>
-          </Link>
+          )}
+          
+          {/* Resume Button - Only show for sender with paused streams */}
+          {isUserSender && stream.status === STREAM_STATUS.PAUSED && (
+            <Button 
+              onClick={handlePauseResume}
+              disabled={actionLoading}
+              variant="outline" 
+              className="flex-1 border-border/50 hover:bg-gray-50 font-light"
+            >
+              {actionLoading ? (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              ) : (
+                <Play className="h-4 w-4 mr-2" />
+              )}
+              Resume
+            </Button>
+          )}
+          
+          {/* Cancel Button - Only show for sender if stream is not cancelled/completed */}
+          {isUserSender && (stream.status === STREAM_STATUS.ACTIVE || stream.status === STREAM_STATUS.PAUSED) && (
+            <Button 
+              onClick={handleCancel}
+              disabled={actionLoading}
+              variant="outline" 
+              className="flex-1 border-red-200 text-red-600 hover:bg-red-50 font-light"
+            >
+              {actionLoading ? (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              ) : (
+                <X className="h-4 w-4 mr-2" />
+              )}
+              Cancel
+            </Button>
+          )}
         </div>
       </div>
     </div>

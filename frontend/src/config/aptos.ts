@@ -19,9 +19,14 @@ const getNetwork = (): Network => {
   }
 };
 
-// Initialize Aptos client
+// Initialize Aptos client with API key
 const config = new AptosConfig({
   network: getNetwork(),
+  ...(process.env.NEXT_PUBLIC_APTOS_API_KEY && {
+    clientConfig: {
+      API_KEY: process.env.NEXT_PUBLIC_APTOS_API_KEY,
+    },
+  }),
 });
 
 export const aptos = new Aptos(config);

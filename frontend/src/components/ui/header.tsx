@@ -18,13 +18,13 @@ export function Header() {
       <div className="max-w-screen-xl mx-auto px-8">
         <div className="flex items-center justify-between py-4">
           <div className="flex items-center gap-8">
-            <h1 className="text-xl font-extralight tracking-wide text-foreground">Remora</h1>
+            <h1 className="text-2xl font-bold tracking-wide text-foreground">Remora</h1>
             <nav className="hidden md:flex items-center gap-6">
               <Link 
                 href="/"
                 className={`text-sm font-light ${isActive("/") ? "text-primary font-normal" : "text-muted-foreground hover:text-foreground"} transition-all duration-200`}
               >
-                Home
+                Streams
               </Link>
               <Link 
                 href="/vault"

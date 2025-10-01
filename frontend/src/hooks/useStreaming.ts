@@ -12,12 +12,23 @@ export function useStreaming() {
   const [receivedStreams, setReceivedStreams] = useState<Stream[]>([]);
   const [totalLocked, setTotalLocked] = useState<number>(0);
 
-  // Fetch user's streams
-  const fetchUserStreams = useCallback(async () => {
+  // Add throttling for API calls
+  const [lastFetchTime, setLastFetchTime] = useState<number>(0);
+  const FETCH_COOLDOWN = 10000; // 10 seconds minimum between fetches
+
+  // Fetch user's streams with throttling
+  const fetchUserStreams = useCallback(async (force = false) => {
     if (!account) return;
+
+    const now = Date.now();
+    if (!force && (now - lastFetchTime) < FETCH_COOLDOWN) {
+      console.log("Skipping fetch due to cooldown");
+      return;
+    }
 
     try {
       setLoading(true);
+      setLastFetchTime(now);
       
       // Get sent stream IDs
       const sentIds = await streamingService.getUserSentStreams(account.address);
@@ -36,12 +47,16 @@ export function useStreaming() {
       // Get total locked
       const locked = await streamingService.getTotalLockedAmount();
       setTotalLocked(locked);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error fetching streams:", error);
+      // Don't show error toast for rate limit issues
+      if (!error.message?.includes("rate limit")) {
+        toast.error("Failed to fetch stream data");
+      }
     } finally {
       setLoading(false);
     }
-  }, [account]);
+  }, [account, lastFetchTime]);
 
   // Create a new stream
   const createStream = useCallback(async (params: CreateStreamParams) => {

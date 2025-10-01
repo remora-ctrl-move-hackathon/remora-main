@@ -43,14 +43,22 @@ export class AptosClient {
     functionArguments: any[];
   }): Promise<any> {
     try {
+      // Prepare headers with optional API key
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+      };
+      
+      // Add API key if available
+      if (process.env.NEXT_PUBLIC_APTOS_API_KEY) {
+        headers["Authorization"] = `Bearer ${process.env.NEXT_PUBLIC_APTOS_API_KEY}`;
+      }
+
       // Use the correct API for view function
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_APTOS_NODE_URL || "https://fullnode.testnet.aptoslabs.com/v1"}/view`,
         {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
+          headers,
           body: JSON.stringify({
             function: payload.function,
             type_arguments: payload.typeArguments || [],
@@ -61,6 +69,26 @@ export class AptosClient {
 
       if (!response.ok) {
         const errorText = await response.text();
+        
+        // Handle rate limit errors more gracefully
+        if (response.status === 429) {
+          console.warn("Rate limit exceeded, using fallback values");
+          // Return default fallback values instead of throwing
+          if (payload.function.includes("get_user_vaults") || 
+              payload.function.includes("get_user_sent_streams") ||
+              payload.function.includes("get_user_received_streams")) {
+            return [];
+          }
+          if (payload.function.includes("get_total") || 
+              payload.function.includes("get_balance") ||
+              payload.function.includes("get_withdrawable")) {
+            return "0";
+          }
+          if (payload.function.includes("get_stream_info")) {
+            return null;
+          }
+        }
+        
         console.error("View function error response:", errorText);
         throw new Error(`Failed to call view function: ${response.status} ${errorText}`);
       }

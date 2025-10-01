@@ -1,35 +1,29 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { Header } from "@/components/ui/header"
-import { Footer } from "@/components/ui/footer"
-import { TrendingUp, TrendingDown, Plus, Users, Lock, Unlock, Play, Pause, DollarSign, Loader2, Info, Copy, Award, ArrowUpRight, Target } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Progress } from "@/components/ui/progress"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Badge } from "@/components/ui/badge"
+import { Progress } from "@/components/ui/progress"
+import { 
+  Plus, TrendingUp, Users, DollarSign, Shield,
+  ArrowUpRight, ArrowDownRight, Loader2, PieChart,
+  BarChart3, Activity, Wallet
+} from "lucide-react"
 import { useWallet } from "@aptos-labs/wallet-adapter-react"
 import { useVault } from "@/hooks/useVault"
-import { parseAptAmount, formatAptAmount, VAULT_STATUS } from "@/config/aptos"
+import { VAULT_STATUS } from "@/config/aptos"
 import toast from "react-hot-toast"
-import Link from "next/link"
 
 export default function Vault() {
-  const [createOpen, setCreateOpen] = useState(false)
-  const [depositOpen, setDepositOpen] = useState(false)
-  const [selectedVault, setSelectedVault] = useState<any>(null)
-  const [isCreating, setIsCreating] = useState(false)
-  const [isDepositing, setIsDepositing] = useState(false)
-  const [activeTab, setActiveTab] = useState("explore")
-  const [amount, setAmount] = useState("100")
-  
-  const { connected, account } = useWallet()
-  const {
+  const { connected } = useWallet()
+  const { 
     loading,
     userVaults,
     managedVaults,
@@ -37,82 +31,66 @@ export default function Vault() {
     createVault,
     depositToVault,
     withdrawFromVault,
-    pauseVault,
-    resumeVault,
-    fetchUserVaults,
+    fetchUserVaults
   } = useVault()
 
-  // Form states for creating vault
+  const [openCreate, setOpenCreate] = useState(false)
+  const [openDeposit, setOpenDeposit] = useState(false)
+  const [selectedVault, setSelectedVault] = useState<any>(null)
+  const [activeTab, setActiveTab] = useState<"all" | "invested" | "managed">("all")
+  
   const [vaultForm, setVaultForm] = useState({
     name: "",
     description: "",
-    managementFee: "200", // 2% in basis points
-    performanceFee: "2000", // 20% in basis points
-    minDeposit: "10",
-    maxCapacity: "10000"
+    managementFee: "2",
+    performanceFee: "20",
+    minDeposit: "100"
   })
 
-  // Form state for deposit
-  const [depositAmount, setDepositAmount] = useState("")
-
-  useEffect(() => {
-    if (connected) {
-      fetchUserVaults()
-    }
-  }, [connected])
+  const [depositAmount, setDepositAmount] = useState("100")
 
   const handleCreateVault = async () => {
     if (!connected) {
-      toast.error("Please connect your wallet to create a vault")
+      toast.error("Please connect your wallet")
       return
     }
 
-    setIsCreating(true)
     try {
       await createVault({
         name: vaultForm.name,
         description: vaultForm.description,
-        strategy: "Multi-strategy", // Default strategy
+        strategy: "Multi-strategy",
         managementFee: parseFloat(vaultForm.managementFee) / 100,
         performanceFee: parseFloat(vaultForm.performanceFee) / 100,
         minInvestment: parseFloat(vaultForm.minDeposit),
-        maxInvestors: 100 // Default max investors
+        maxInvestors: 100
       })
-      
-      toast.success(`Vault created! ${vaultForm.name} is now live`)
-      
-      setCreateOpen(false)
+
+      setOpenCreate(false)
       setVaultForm({
         name: "",
         description: "",
-        managementFee: "200",
-        performanceFee: "2000",
-        minDeposit: "10",
-        maxCapacity: "10000"
+        managementFee: "2",
+        performanceFee: "20",
+        minDeposit: "100"
       })
+      
+      toast.success("Vault created successfully!")
     } catch (error: any) {
       toast.error(error.message || "Failed to create vault")
-    } finally {
-      setIsCreating(false)
     }
   }
 
   const handleDeposit = async () => {
     if (!selectedVault || !depositAmount) return
 
-    setIsDepositing(true)
     try {
-      await depositToVault(selectedVault.id, parseFloat(depositAmount))
-      
+      await depositToVault(selectedVault.vaultId, parseFloat(depositAmount))
+      setOpenDeposit(false)
+      setDepositAmount("100")
       toast.success(`Deposited ${depositAmount} APT successfully!`)
-      
-      setDepositOpen(false)
-      setDepositAmount("")
-      setSelectedVault(null)
     } catch (error: any) {
-      toast.error(error.message || "Deposit failed")
-    } finally {
-      setIsDepositing(false)
+      toast.error(error.message || "Failed to deposit")
     }
   }
 
@@ -121,260 +99,341 @@ export default function Vault() {
       await withdrawFromVault(vaultId, shares)
       toast.success("Withdrawal successful!")
     } catch (error: any) {
-      toast.error(error.message || "Withdrawal failed")
+      toast.error(error.message || "Failed to withdraw")
     }
   }
 
-  const topTraders = [
-    { 
-      id: 1, 
-      name: "0x742d...8f9a", 
-      pnl: "+45.2%", 
-      return7d: "+12.3%", 
-      return30d: "+45.2%", 
-      followers: 1234,
-      strategy: "Swing Trading"
-    },
-    { 
-      id: 2, 
-      name: "0x9fc1...3e2d", 
-      pnl: "+38.5%", 
-      return7d: "+8.5%", 
-      return30d: "+38.5%", 
-      followers: 892,
-      strategy: "Yield Farming"
-    },
-    { 
-      id: 3, 
-      name: "0x1a3b...7c5e", 
-      pnl: "+62.1%", 
-      return7d: "+18.4%", 
-      return30d: "+62.1%", 
-      followers: 2156,
-      strategy: "Scalping"
-    },
-  ]
+  const getStatusBadge = (status: number) => {
+    switch(status) {
+      case VAULT_STATUS.ACTIVE:
+        return <Badge className="bg-green-50 text-green-600 border-0">Active</Badge>
+      case VAULT_STATUS.PAUSED:
+        return <Badge className="bg-yellow-50 text-yellow-600 border-0">Paused</Badge>
+      case VAULT_STATUS.CLOSED:
+        return <Badge className="bg-red-50 text-red-600 border-0">Closed</Badge>
+      default:
+        return null
+    }
+  }
 
-  const myVaults = [
-    { id: 1, trader: "0x742d...8f9a", invested: 1000, current: 1234, pnl: "+23.4%", allocation: "45%" },
-    { id: 2, trader: "0x9fc1...3e2d", invested: 500, current: 585, pnl: "+17.0%", allocation: "25%" },
-    { id: 3, trader: "0x1a3b...7c5e", invested: 750, current: 912, pnl: "+21.6%", allocation: "30%" },
-  ]
+  // Remove duplicates by vaultId when combining arrays
+  const allVaults = [...userVaults, ...managedVaults.filter(mv => 
+    !userVaults.some(uv => uv.vaultId === mv.vaultId)
+  )]
+  const displayVaults = activeTab === "all" ? allVaults : 
+                       activeTab === "invested" ? userVaults : managedVaults
 
+  // Calculate total stats
+  const totalInvested = userVaults.reduce((acc, v) => acc + (v.totalValue || 0), 0)
+  const totalReturns = userVaults.reduce((acc, v) => {
+    // Since we don't have performance data, calculate based on totalValue for now
+    const returns = (v.totalValue || 0) * 0.05 // Assume 5% for demo
+    return acc + returns
+  }, 0)
+  const avgAPY = userVaults.length > 0 
+    ? 8.5 // Static demo value since performance not in interface
+    : 0
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-white to-primary/5">
       <Header />
       <div className="max-w-screen-xl mx-auto px-8 py-12">
-        <div className="mb-8">
-          <h1 className="text-2xl font-extralight text-gray-900">Copy Trading Vaults</h1>
-          <p className="text-sm text-gray-500 font-light">Follow top traders automatically</p>
+        {/* Header */}
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <h1 className="text-3xl font-light text-gray-900">Copy Trading Vaults</h1>
+            <p className="text-sm text-gray-500 font-light mt-1">Follow top traders automatically</p>
+          </div>
+          <Dialog open={openCreate} onOpenChange={setOpenCreate}>
+            <DialogTrigger asChild>
+              <Button className="bg-primary hover:bg-primary/90 text-white">
+                <Plus className="h-4 w-4 mr-2" />
+                Create Vault
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Create Trading Vault</DialogTitle>
+                <DialogDescription>
+                  Set up a new vault for others to invest in your strategy
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4 py-4">
+                <div className="space-y-2">
+                  <Label htmlFor="name">Vault Name</Label>
+                  <Input 
+                    id="name" 
+                    placeholder="e.g., DeFi Yield Strategy" 
+                    value={vaultForm.name}
+                    onChange={(e) => setVaultForm({...vaultForm, name: e.target.value})}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="description">Description</Label>
+                  <Textarea 
+                    id="description" 
+                    placeholder="Describe your investment strategy..." 
+                    value={vaultForm.description}
+                    onChange={(e) => setVaultForm({...vaultForm, description: e.target.value})}
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="mgmtFee">Management Fee (%)</Label>
+                    <Input 
+                      id="mgmtFee" 
+                      type="number" 
+                      placeholder="2" 
+                      value={vaultForm.managementFee}
+                      onChange={(e) => setVaultForm({...vaultForm, managementFee: e.target.value})}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="perfFee">Performance Fee (%)</Label>
+                    <Input 
+                      id="perfFee" 
+                      type="number" 
+                      placeholder="20" 
+                      value={vaultForm.performanceFee}
+                      onChange={(e) => setVaultForm({...vaultForm, performanceFee: e.target.value})}
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="minDeposit">Minimum Deposit (APT)</Label>
+                  <Input 
+                    id="minDeposit" 
+                    type="number" 
+                    placeholder="100" 
+                    value={vaultForm.minDeposit}
+                    onChange={(e) => setVaultForm({...vaultForm, minDeposit: e.target.value})}
+                  />
+                </div>
+              </div>
+              <div className="flex justify-end gap-3">
+                <Button variant="outline" onClick={() => setOpenCreate(false)}>
+                  Cancel
+                </Button>
+                <Button onClick={handleCreateVault} disabled={!vaultForm.name}>
+                  Create Vault
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
         </div>
 
-        <Card className="mb-8 bg-white border-border/50 shadow-sm rounded-xl hover:shadow-md transition-all duration-300">
-          <CardContent className="pt-6">
-            <div className="grid grid-cols-3 gap-6">
-              <div>
-                <div className="text-sm text-gray-500 font-light mb-1">DEPOSITS</div>
-                <div className="text-2xl font-extralight text-gray-900">$2,250</div>
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-8">
+          <Card className="bg-white border-border/50">
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm text-gray-500 font-light">TVL</span>
+                <DollarSign className="h-4 w-4 text-primary" />
               </div>
-              <div>
-                <div className="text-sm text-gray-500 font-light mb-1">Current Value</div>
-                <div className="text-2xl font-extralight text-green-600">$2,731</div>
-              </div>
-              <div>
-                <div className="text-sm text-gray-500 font-light mb-1">Total P&L</div>
-                <div className="text-2xl font-extralight text-green-600 flex items-center gap-1">
-                  <ArrowUpRight className="h-5 w-5" />
-                  +21.4%
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+              <div className="text-2xl font-light text-gray-900">{totalValueLocked.toFixed(2)} APT</div>
+              <div className="text-xs text-gray-400 mt-1">Total Value Locked</div>
+            </CardContent>
+          </Card>
 
-        <Tabs defaultValue="leaderboard" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-2 bg-white border border-border/30 rounded-xl">
-            <TabsTrigger value="leaderboard" className="font-light">Top Traders</TabsTrigger>
-            <TabsTrigger value="myvaults" className="font-light">My Vaults</TabsTrigger>
+          <Card className="bg-white border-border/50">
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm text-gray-500 font-light">Active Vaults</span>
+                <Shield className="h-4 w-4 text-primary" />
+              </div>
+              <div className="text-2xl font-light text-gray-900">{allVaults.filter(v => v.status === VAULT_STATUS.ACTIVE).length}</div>
+              <div className="text-xs text-gray-400 mt-1">Currently active</div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-white border-border/50">
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm text-gray-500 font-light">Your Investment</span>
+                <Wallet className="h-4 w-4 text-primary" />
+              </div>
+              <div className="text-2xl font-light text-gray-900">{totalInvested.toFixed(2)} APT</div>
+              <div className="text-xs text-gray-400 mt-1">Across {userVaults.length} vaults</div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-white border-border/50">
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm text-gray-500 font-light">Avg APY</span>
+                <TrendingUp className="h-4 w-4 text-green-600" />
+              </div>
+              <div className="text-2xl font-light text-green-600">{avgAPY.toFixed(2)}%</div>
+              <div className="text-xs text-gray-400 mt-1">Average returns</div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Tabs */}
+        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)}>
+          <TabsList className="bg-white border border-border/30">
+            <TabsTrigger value="all">All Vaults</TabsTrigger>
+            <TabsTrigger value="invested">Your Investments</TabsTrigger>
+            <TabsTrigger value="managed">Managed Vaults</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="leaderboard" className="space-y-4">
-            {topTraders.map((trader, index) => (
-              <Card key={trader.id} className="bg-white border-border/50 shadow-sm hover:shadow-md transition-all duration-300">
-                <CardContent className="pt-6 pb-6">
-                  <div className="flex items-start justify-between mb-6">
-                    <div className="flex items-center gap-4">
-                      <div>
-                        <div className="font-light text-lg text-foreground font-mono">{trader.name}</div>
-                        <div className="flex items-center gap-2 text-sm font-light text-muted-foreground">
-                          <Users className="h-3 w-3" />
-                          {trader.followers.toLocaleString()} followers
+          <TabsContent value={activeTab} className="mt-6">
+            {loading ? (
+              <div className="flex justify-center py-8">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              </div>
+            ) : displayVaults.length === 0 ? (
+              <Card className="bg-white border-border/50">
+                <CardContent className="pt-6 text-center py-8">
+                  <p className="text-gray-500">
+                    {activeTab === "all" ? "No vaults available" : 
+                     activeTab === "invested" ? "You haven't invested in any vaults yet" :
+                     "You haven't created any vaults yet"}
+                  </p>
+                  <Button 
+                    onClick={() => activeTab === "managed" ? setOpenCreate(true) : null} 
+                    className="mt-4"
+                    disabled={!connected}
+                  >
+                    {activeTab === "managed" ? "Create your first vault" : "Explore vaults"}
+                  </Button>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {displayVaults.map((vault, index) => (
+                  <Card key={`${vault.vaultId}-${index}`} className="bg-white border-border/50 hover:shadow-lg transition-all">
+                    <CardHeader>
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <CardTitle className="font-semibold">{vault.name}</CardTitle>
+                          <CardDescription className="text-xs">
+                            Manager: {vault.manager.slice(0, 8)}...{vault.manager.slice(-6)}
+                          </CardDescription>
+                        </div>
+                        {getStatusBadge(vault.status)}
+                      </div>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="grid grid-cols-3 gap-4 text-sm">
+                        <div>
+                          <p className="text-gray-500">TVL</p>
+                          <p className="font-semibold">{(vault.totalValue || 0).toFixed(2)} APT</p>
+                        </div>
+                        <div>
+                          <p className="text-gray-500">Performance</p>
+                          <p className={`font-semibold text-green-600`}>
+                            +8.5%
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-gray-500">Investors</p>
+                          <p className="font-semibold">{vault.currentInvestors || 0}</p>
                         </div>
                       </div>
-                    </div>
-                    <div className="text-right">
-                      <div className="text-2xl font-extralight text-success">{trader.pnl}</div>
-                      <div className="text-xs font-light text-muted-foreground">30d return</div>
-                    </div>
-                  </div>
 
-                  <div className="grid grid-cols-2 gap-4 mb-6">
-                    <div className="bg-gradient-to-br from-white to-primary/5 rounded-xl p-4 border border-border/30">
-                      <div className="text-xs font-light text-muted-foreground mb-2">7d Return</div>
-                      <div className="text-lg font-light text-success">{trader.return7d}</div>
-                    </div>
-                    <div className="bg-gradient-to-br from-white to-primary/5 rounded-xl p-4 border border-border/30">
-                      <div className="text-xs font-light text-muted-foreground mb-2">Strategy</div>
-                      <div className="text-sm font-light text-foreground">{trader.strategy}</div>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center justify-end">
-                    <Dialog open={depositOpen && selectedVault?.id === trader.id} onOpenChange={(open) => {
-                      setDepositOpen(open)
-                      if (!open) setSelectedVault(null)
-                    }}>
-                      <DialogTrigger asChild>
-                        <Button 
-                          className="bg-primary hover:bg-primary/90 text-white font-light transition-all duration-200 shadow-sm hover:shadow-md"
-                          onClick={() => {
-                            setSelectedVault(trader)
-                            setDepositOpen(true)
-                          }}
-                        >
-                          <TrendingUp className="h-4 w-4 mr-2" />
-                          Follow Trader
-                        </Button>
-                      </DialogTrigger>
-                      <DialogContent className="bg-white border-border/50">
-                        <DialogHeader>
-                          <DialogTitle className="font-light">Follow {trader.name}</DialogTitle>
-                          <DialogDescription className="font-light">
-                            Allocate funds to copy this trader's strategy
-                          </DialogDescription>
-                        </DialogHeader>
-                        <div className="space-y-4 py-4">
-                          <div className="space-y-2">
-                            <Label className="font-light">Amount (USDC)</Label>
-                            <Input 
-                              type="number" 
-                              value={amount}
-                              onChange={(e) => setAmount(e.target.value)}
-                              className="border-border/50 font-light"
-                            />
-                          </div>
-                          <div className="bg-gradient-to-br from-white to-primary/5 rounded-xl p-4 space-y-2 border border-border/30">
-                            <div className="flex justify-between text-sm">
-                              <span className="font-light text-muted-foreground">Trader</span>
-                              <span className="font-light">{trader.name}</span>
-                            </div>
-                            <div className="flex justify-between text-sm">
-                              <span className="font-light text-muted-foreground">Expected ROI</span>
-                              <span className="font-light text-success">{trader.pnl}</span>
-                            </div>
-                            <div className="flex justify-between text-sm">
-                              <span className="font-light text-muted-foreground">Strategy</span>
-                              <span className="font-light">{trader.strategy}</span>
-                            </div>
-                          </div>
+                      <div className="space-y-2 text-sm">
+                        <div className="flex justify-between">
+                          <span className="text-gray-500">Management Fee</span>
+                          <span>{((vault.managementFee || 0) * 100).toFixed(1)}%</span>
                         </div>
-                        <DialogFooter>
-                          <Button variant="outline" onClick={() => {
-                            setDepositOpen(false)
-                            setSelectedVault(null)
-                            setAmount("100")
-                          }} className="border-border/50 font-light">Cancel</Button>
-                          <Button onClick={() => {
-                            handleDeposit()
-                          }} className="bg-primary hover:bg-primary/90 text-white font-light">
-                            Confirm & Follow
+                        <div className="flex justify-between">
+                          <span className="text-gray-500">Performance Fee</span>
+                          <span>{((vault.performanceFee || 0) * 100).toFixed(0)}%</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-500">Min Investment</span>
+                          <span>{vault.minInvestment || 0} APT</span>
+                        </div>
+                      </div>
+
+                      {vault.status === VAULT_STATUS.ACTIVE && (
+                        <div className="flex gap-2">
+                          <Button 
+                            className="flex-1"
+                            onClick={() => {
+                              setSelectedVault(vault)
+                              setOpenDeposit(true)
+                            }}
+                          >
+                            <ArrowUpRight className="h-4 w-4 mr-1" />
+                            Deposit
                           </Button>
-                        </DialogFooter>
-                      </DialogContent>
-                    </Dialog>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </TabsContent>
-
-          <TabsContent value="myvaults" className="space-y-4">
-            {myVaults.map((vault) => (
-              <Card key={vault.id} className="bg-white border-border/50 shadow-sm hover:shadow-md transition-all duration-300">
-                <CardContent className="pt-6 pb-6">
-                  <div className="flex items-center justify-between mb-6">
-                    <div>
-                      <div className="font-light text-lg mb-1">{vault.trader}</div>
-                      <div className="text-sm font-light text-muted-foreground">Allocation: {vault.allocation}</div>
-                    </div>
-                    <div className="text-right">
-                      <div className="text-2xl font-extralight text-success">{vault.pnl}</div>
-                      <div className="text-xs font-light text-muted-foreground">P&L</div>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4 mb-6">
-                    <div className="bg-gradient-to-br from-white to-primary/5 rounded-xl p-4 border border-border/30">
-                      <div className="text-xs font-light text-muted-foreground mb-2">Invested</div>
-                      <div className="text-lg font-light">${vault.invested}</div>
-                    </div>
-                    <div className="bg-gradient-to-br from-white to-primary/5 rounded-xl p-4 border border-border/30">
-                      <div className="text-xs font-light text-muted-foreground mb-2">Current Value</div>
-                      <div className="text-lg font-light text-success">${vault.current}</div>
-                    </div>
-                  </div>
-
-                  <div className="space-y-3">
-                    <div className="flex gap-3">
-                      <Button variant="outline" size="sm" className="flex-1 border-primary/50 text-primary hover:bg-primary/5 font-light transition-all duration-200">
-                        Withdraw
-                      </Button>
-                      <Button variant="outline" size="sm" className="flex-1 border-primary/50 text-primary hover:bg-primary/5 font-light transition-all duration-200">
-                        Add Funds
-                      </Button>
-                    </div>
-                    <div className="grid grid-cols-2 gap-2">
-                      <Link href="/streams">
-                        <Button variant="ghost" size="sm" className="w-full text-xs text-muted-foreground hover:text-white">
-                          Stream Profits
-                        </Button>
-                      </Link>
-                      <Link href="/remit">
-                        <Button variant="ghost" size="sm" className="w-full text-xs text-muted-foreground hover:text-white">
-                          Send as Remit
-                        </Button>
-                      </Link>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-
-            <Card className="backdrop-blur-xl bg-card border-border">
-              <CardContent className="pt-6 text-center">
-                <Target className="h-12 w-12 mx-auto mb-3 text-purple-400" />
-                <h3 className="font-bold text-lg mb-2">Portfolio Summary</h3>
-                <div className="grid grid-cols-3 gap-4 mt-4">
-                  <div>
-                    <div className="text-2xl font-bold text-green-400">+$481</div>
-                    <div className="text-xs text-muted-foreground">Total Earnings</div>
-                  </div>
-                  <div>
-                    <div className="text-2xl font-bold">3</div>
-                    <div className="text-xs text-muted-foreground">Active Vaults</div>
-                  </div>
-                  <div>
-                    <div className="text-2xl font-bold text-green-400">+21.4%</div>
-                    <div className="text-xs text-muted-foreground">Avg Return</div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+                          {userVaults.some(v => v.vaultId === vault.vaultId) && (
+                            <Button 
+                              variant="outline"
+                              className="flex-1"
+                              onClick={() => handleWithdraw(vault.vaultId, 100)}
+                            >
+                              <ArrowDownRight className="h-4 w-4 mr-1" />
+                              Withdraw
+                            </Button>
+                          )}
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
           </TabsContent>
         </Tabs>
-      </div>
 
+        {/* Deposit Dialog */}
+        <Dialog open={openDeposit} onOpenChange={setOpenDeposit}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Deposit to Vault</DialogTitle>
+              <DialogDescription>
+                Invest in {selectedVault?.name}
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="depositAmount">Amount (APT)</Label>
+                <Input 
+                  id="depositAmount" 
+                  type="number" 
+                  placeholder="100" 
+                  value={depositAmount}
+                  onChange={(e) => setDepositAmount(e.target.value)}
+                />
+                <p className="text-xs text-gray-500">
+                  Minimum: {selectedVault?.minInvestment} APT
+                </p>
+              </div>
+              
+              {selectedVault && (
+                <div className="p-3 bg-gray-50 rounded-lg space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Expected APY</span>
+                    <span className="text-green-600">8.50%</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Management Fee</span>
+                    <span>{((selectedVault.managementFee || 0) * 100).toFixed(1)}% annually</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Performance Fee</span>
+                    <span>{((selectedVault.performanceFee || 0) * 100).toFixed(0)}% of profits</span>
+                  </div>
+                </div>
+              )}
+            </div>
+            <div className="flex justify-end gap-3">
+              <Button variant="outline" onClick={() => setOpenDeposit(false)}>
+                Cancel
+              </Button>
+              <Button 
+                onClick={handleDeposit} 
+                disabled={!depositAmount || parseFloat(depositAmount) < (selectedVault?.minInvestment || 0)}
+              >
+                Deposit
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+      </div>
     </div>
   )
 }
