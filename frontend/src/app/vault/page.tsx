@@ -20,6 +20,7 @@ import { useWallet } from "@aptos-labs/wallet-adapter-react"
 import { useVault } from "@/hooks/useVault"
 import { VAULT_STATUS } from "@/config/aptos"
 import toast from "react-hot-toast"
+import Link from "next/link"
 
 export default function Vault() {
   const { connected } = useWallet()
@@ -144,13 +145,23 @@ export default function Vault() {
             <h1 className="text-3xl font-light text-gray-900">Copy Trading Vaults</h1>
             <p className="text-sm text-gray-500 font-light mt-1">Follow top traders automatically</p>
           </div>
-          <Dialog open={openCreate} onOpenChange={setOpenCreate}>
-            <DialogTrigger asChild>
-              <Button className="bg-primary hover:bg-primary/90 text-white">
-                <Plus className="h-4 w-4 mr-2" />
-                Create Vault
+          <div className="flex gap-3">
+            <Link href="/vault/trading">
+              <Button variant="outline" className="bg-white">
+                <BarChart3 className="h-4 w-4 mr-2" />
+                Perpetual Trading
               </Button>
-            </DialogTrigger>
+            </Link>
+            <Dialog open={openCreate} onOpenChange={setOpenCreate}>
+              <DialogTrigger asChild>
+                <Button className="bg-primary hover:bg-primary/90 text-white">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Create Vault
+                </Button>
+              </DialogTrigger>
+            </Dialog>
+          </div>
+          <Dialog open={openCreate} onOpenChange={setOpenCreate}>
             <DialogContent>
               <DialogHeader>
                 <DialogTitle>Create Trading Vault</DialogTitle>
