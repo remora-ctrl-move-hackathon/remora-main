@@ -10,13 +10,12 @@ import { Textarea } from "@/components/ui/textarea"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Badge } from "@/components/ui/badge"
-import { Progress } from "@/components/ui/progress"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 import { Switch } from "@/components/ui/switch"
 import { 
-  Plus, TrendingUp, Users, DollarSign, Shield,
-  ArrowUpRight, ArrowDownRight, Loader2, PieChart,
-  BarChart3, Activity, Wallet, Trophy, UserPlus, Minus
+  Plus, TrendingUp, DollarSign, Shield,
+  ArrowUpRight, ArrowDownRight, Loader2,
+  BarChart3, Wallet, Trophy, UserPlus, Minus
 } from "lucide-react"
 import { useWallet } from "@aptos-labs/wallet-adapter-react"
 import { useVault } from "@/hooks/useVault"
@@ -35,8 +34,7 @@ export default function Vault() {
     createVault,
     depositToVault,
     withdrawFromVault,
-    getInvestorShares,
-    fetchUserVaults
+    getInvestorShares
   } = useVault()
 
   const [openCreate, setOpenCreate] = useState(false)
@@ -83,7 +81,10 @@ export default function Vault() {
         description: "",
         managementFee: "2",
         performanceFee: "20",
-        minDeposit: "100"
+        minDeposit: "100",
+        isMultiSig: false,
+        signers: [""],
+        threshold: "1"
       })
       
       toast.success("Vault created successfully!")
@@ -159,11 +160,6 @@ export default function Vault() {
 
   // Calculate total stats
   const totalInvested = userVaults.reduce((acc, v) => acc + (v.totalValue || 0), 0)
-  const totalReturns = userVaults.reduce((acc, v) => {
-    // Since we don't have performance data, calculate based on totalValue for now
-    const returns = (v.totalValue || 0) * 0.05 // Assume 5% for demo
-    return acc + returns
-  }, 0)
   const avgAPY = userVaults.length > 0 
     ? 8.5 // Static demo value since performance not in interface
     : 0
@@ -439,12 +435,6 @@ export default function Vault() {
                           </CardDescription>
                         </div>
                         <div className="flex items-center gap-2">
-                          {vault.isMultiSig && (
-                            <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                              <Shield className="h-3 w-3" />
-                              Multi-sig
-                            </div>
-                          )}
                           {getStatusBadge(vault.status)}
                         </div>
                       </div>
@@ -540,12 +530,6 @@ export default function Vault() {
                           </CardDescription>
                         </div>
                         <div className="flex items-center gap-2">
-                          {vault.isMultiSig && (
-                            <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                              <Shield className="h-3 w-3" />
-                              Multi-sig
-                            </div>
-                          )}
                           {getStatusBadge(vault.status)}
                         </div>
                       </div>
@@ -643,12 +627,6 @@ export default function Vault() {
                           </CardDescription>
                         </div>
                         <div className="flex items-center gap-2">
-                          {vault.isMultiSig && (
-                            <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                              <Shield className="h-3 w-3" />
-                              Multi-sig
-                            </div>
-                          )}
                           {getStatusBadge(vault.status)}
                         </div>
                       </div>

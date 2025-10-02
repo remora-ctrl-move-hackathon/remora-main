@@ -10,6 +10,9 @@ import {
   Sparkles, TrendingUp, Zap, Wallet, 
   Search, ArrowRight, History, Star 
 } from "lucide-react"
+import { geminiAI, TradingIntent } from "@/services/gemini-ai.service"
+import { useRouter } from "next/navigation"
+import toast from "react-hot-toast"
 
 interface CommandOption {
   id: string
@@ -59,7 +62,15 @@ export function CommandBar() {
   const [isOpen, setIsOpen] = useState(false)
   const [search, setSearch] = useState("")
   const [selectedIndex, setSelectedIndex] = useState(0)
+  const [aiSuggestion, setAiSuggestion] = useState<string>("") 
+  const [isProcessingAI, setIsProcessingAI] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
+  const router = useRouter()
+  
+  // Initialize Gemini AI on mount
+  useEffect(() => {
+    geminiAI.initialize()
+  }, [])
 
   // Filter options based on search
   const filteredOptions = commandOptions.filter(option =>
@@ -113,11 +124,76 @@ export function CommandBar() {
     }
   }, [isOpen])
 
-  const handleSelect = (option: CommandOption) => {
+  const handleSelect = async (option: CommandOption) => {
     console.log("Selected:", option)
-    setIsOpen(false)
+    
+    // Handle navigation
+    switch (option.id) {
+      case "ai-trade":
+        setSearch("Buy 100 APT with 10x leverage")
+        handleAICommand("Buy 100 APT with 10x leverage")
+        break
+      case "buy-apt":
+        router.push("/trading")
+        setIsOpen(false)
+        break
+      case "create-stream":
+        router.push("/streaming")
+        setIsOpen(false)
+        break
+      case "view-vaults":
+        router.push("/vault")
+        setIsOpen(false)
+        break
+      default:
+        setIsOpen(false)
+    }
     setSearch("")
-    // Add functionality here
+  }
+  
+  const handleAICommand = async (query: string) => {
+    if (!query.trim()) return
+    
+    setIsProcessingAI(true)
+    try {
+      const intent = await geminiAI.parseUserIntent(query)
+      const response = await geminiAI.generateResponse(intent)
+      
+      // Show AI response
+      setAiSuggestion(response)
+      
+      // Handle specific actions based on intent type
+      if (intent.confidence > 0.7) {
+        if (intent.type === 'trade') {
+          toast.success(`Ready to ${intent.action} ${intent.params?.amount} ${intent.params?.token}`)
+          router.push(`/trading/advanced?action=${intent.action}&amount=${intent.params?.amount}`)
+          setIsOpen(false)
+        } else if (intent.type === 'stream') {
+          // Navigate to streaming page with pre-filled parameters
+          const params = new URLSearchParams({
+            ai: 'true',
+            action: 'create',
+            ...(intent.params?.recipient && { recipient: intent.params.recipient }),
+            ...(intent.params?.amount && { amount: intent.params.amount }),
+            ...(intent.params?.duration && { duration: intent.params.duration }),
+            ...(intent.params?.token && { token: intent.params.token })
+          })
+          
+          toast.success(`Setting up stream: ${intent.params?.amount} ${intent.params?.token} to ${intent.params?.recipient || 'recipient'}`)
+          router.push(`/streams?${params.toString()}`)
+          setIsOpen(false)
+        } else if (intent.type === 'vault') {
+          toast.success(`Ready to ${intent.action} ${intent.params?.amount} ${intent.params?.token}`)
+          router.push(`/vault?action=${intent.action}&amount=${intent.params?.amount}`)
+          setIsOpen(false)
+        }
+      }
+    } catch (error) {
+      console.error("AI processing error:", error)
+      setAiSuggestion("I can help you trade APT, set up payment streams, or manage vaults. Try: 'Stream 50 APT to alice.apt for 30 days'")
+    } finally {
+      setIsProcessingAI(false)
+    }
   }
 
   const getCategoryLabel = (category: string) => {
@@ -132,11 +208,11 @@ export function CommandBar() {
 
   const getCategoryColor = (category: string) => {
     switch (category) {
-      case "ai": return "bg-purple-500/10 text-purple-600"
-      case "action": return "bg-blue-500/10 text-blue-600"
-      case "navigation": return "bg-green-500/10 text-green-600"
-      case "recent": return "bg-gray-500/10 text-gray-600"
-      default: return "bg-gray-500/10 text-gray-600"
+      case "ai": return "bg-primary/10 text-primary" // Teal for AI
+      case "action": return "bg-primary/20 text-primary" // Teal variations
+      case "navigation": return "bg-muted/50 text-foreground" // Black/white
+      case "recent": return "bg-muted/30 text-muted-foreground" // Muted
+      default: return "bg-muted/30 text-muted-foreground"
     }
   }
 
@@ -145,11 +221,11 @@ export function CommandBar() {
       {/* Trigger Button (Optional - can be triggered with Cmd+K) */}
       <button
         onClick={() => setIsOpen(true)}
-        className="hidden md:flex items-center gap-2 px-3 py-1.5 text-sm text-muted-foreground border rounded-lg hover:bg-muted/50 transition-colors"
+        className="hidden md:flex items-center gap-2 px-3 py-1.5 text-sm text-foreground border border-border rounded-lg hover:bg-primary/5 hover:border-primary/30 transition-all duration-200"
       >
-        <Search className="h-4 w-4" />
+        <Sparkles className="h-4 w-4 text-primary" />
         <span>Search or ask AI...</span>
-        <kbd className="ml-auto text-xs bg-muted px-1.5 py-0.5 rounded">⌘K</kbd>
+        <kbd className="ml-auto text-xs bg-primary/10 text-primary px-1.5 py-0.5 rounded border border-primary/20">⌘K</kbd>
       </button>
 
       {/* Command Bar Modal */}
@@ -177,29 +253,47 @@ export function CommandBar() {
                 {/* Search Input */}
                 <div className="p-4 border-b">
                   <div className="flex items-center gap-3">
-                    <Sparkles className="h-5 w-5 text-muted-foreground" />
+                    <Sparkles className="h-5 w-5 text-primary animate-pulse" />
                     <Input
                       ref={inputRef}
                       value={search}
-                      onChange={(e) => setSearch(e.target.value)}
+                      onChange={(e) => {
+                        setSearch(e.target.value)
+                        // Debounced AI processing
+                        if (e.target.value.length > 3) {
+                          const timer = setTimeout(() => handleAICommand(e.target.value), 500)
+                          return () => clearTimeout(timer)
+                        }
+                      }}
+                      onKeyPress={(e) => {
+                        if (e.key === 'Enter' && search) {
+                          handleAICommand(search)
+                        }
+                      }}
                       placeholder="Ask AI anything or search..."
-                      className="flex-1 border-0 p-0 text-lg focus-visible:ring-0"
+                      className="flex-1 border-0 p-0 text-lg focus-visible:ring-0 placeholder:text-muted-foreground"
                     />
-                    <kbd className="text-xs bg-muted px-2 py-1 rounded">ESC</kbd>
+                    <kbd className="text-xs bg-muted px-2 py-1 rounded border border-border">ESC</kbd>
                   </div>
                 </div>
 
                 {/* AI Suggestion Banner */}
                 {search && (
-                  <div className="px-4 py-3 bg-purple-50 dark:bg-purple-950/20 border-b">
+                  <div className="px-4 py-3 bg-primary/10 border-b border-primary/20">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        <Sparkles className="h-4 w-4 text-purple-600" />
-                        <span className="text-sm">
-                          AI: Try "{search.toLowerCase().includes('buy') ? 'Buy 100 USDC of APT' : 'Show my portfolio'}"
+                        <Sparkles className="h-4 w-4 text-primary animate-pulse" />
+                        <span className="text-sm text-foreground">
+                          {isProcessingAI ? (
+                            "AI is thinking..."
+                          ) : aiSuggestion ? (
+                            aiSuggestion
+                          ) : (
+                            `AI: Try "${search.toLowerCase().includes('buy') ? 'Buy 100 APT with 10x leverage' : 'Show my portfolio'}"`
+                          )}
                         </span>
                       </div>
-                      <kbd className="text-xs bg-purple-100 dark:bg-purple-900/50 px-2 py-0.5 rounded">↵</kbd>
+                      <kbd className="text-xs bg-primary/20 text-primary px-2 py-0.5 rounded border border-primary/30">↵</kbd>
                     </div>
                   </div>
                 )}
@@ -227,8 +321,8 @@ export function CommandBar() {
                             key={option.id}
                             onClick={() => handleSelect(option)}
                             className={`
-                              w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-colors
-                              ${isSelected ? 'bg-muted' : 'hover:bg-muted/50'}
+                              w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-all duration-200
+                              ${isSelected ? 'bg-primary/10 border-l-2 border-primary' : 'hover:bg-muted/50'}
                             `}
                             onMouseEnter={() => setSelectedIndex(globalIndex)}
                           >
@@ -242,7 +336,7 @@ export function CommandBar() {
                               </div>
                             </div>
                             {option.shortcut && (
-                              <kbd className="text-xs bg-muted px-2 py-1 rounded">
+                              <kbd className="text-xs bg-primary/10 text-primary px-2 py-1 rounded border border-primary/20">
                                 {option.shortcut}
                               </kbd>
                             )}
@@ -263,21 +357,21 @@ export function CommandBar() {
                 </div>
 
                 {/* Footer */}
-                <div className="border-t px-4 py-2 bg-muted/30">
+                <div className="border-t px-4 py-2 bg-background">
                   <div className="flex items-center justify-between text-xs text-muted-foreground">
                     <div className="flex items-center gap-4">
                       <span className="flex items-center gap-1">
-                        <kbd className="bg-muted px-1.5 py-0.5 rounded">↑↓</kbd>
+                        <kbd className="bg-muted px-1.5 py-0.5 rounded border border-border">↑↓</kbd>
                         Navigate
                       </span>
                       <span className="flex items-center gap-1">
-                        <kbd className="bg-muted px-1.5 py-0.5 rounded">↵</kbd>
+                        <kbd className="bg-muted px-1.5 py-0.5 rounded border border-border">↵</kbd>
                         Select
                       </span>
                     </div>
                     <div className="flex items-center gap-1">
-                      <Command className="h-3 w-3" />
-                      <span>AI Powered</span>
+                      <Sparkles className="h-3 w-3 text-primary" />
+                      <span className="text-primary font-medium">Gemini AI Powered</span>
                     </div>
                   </div>
                 </div>

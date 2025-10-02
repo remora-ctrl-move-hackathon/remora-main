@@ -1,4 +1,4 @@
-import { AptosClient } from '@aptos-labs/ts-sdk'
+import { Aptos, AptosConfig, Network } from '@aptos-labs/ts-sdk'
 import { StreamingService } from '@/services/streaming.service'
 import { VaultService } from '@/services/vault.service'
 import { OffRampService } from '@/services/offramp.service'
@@ -6,13 +6,18 @@ import { CONTRACTS } from '@/config/aptos'
 
 // Unified SDK for all Remora services
 export class RemoraSDK {
-  private client: AptosClient
+  private client: Aptos
   public streaming: StreamingService
   public vault: VaultService
   public offramp: OffRampService
 
   constructor(nodeUrl?: string) {
-    this.client = new AptosClient(nodeUrl || process.env.NEXT_PUBLIC_APTOS_NODE_URL!)
+    // Use the aptos instance from config
+    const config = new AptosConfig({ 
+      network: Network.TESTNET,
+      ...(nodeUrl && { fullnode: nodeUrl })
+    })
+    this.client = new Aptos(config)
     this.streaming = new StreamingService()
     this.vault = new VaultService()
     this.offramp = new OffRampService()

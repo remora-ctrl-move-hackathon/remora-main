@@ -1,5 +1,4 @@
 // Merkle Trade Integration for Advanced Perpetual Trading
-import { HexString } from "@aptos-labs/ts-sdk"
 
 const MERKLE_TRADE_MODULE = "0xe95e7998587e360db1185b3aa020dd07d77429ec340bbcd2bc8bc455e71d0e1a::merkle"
 

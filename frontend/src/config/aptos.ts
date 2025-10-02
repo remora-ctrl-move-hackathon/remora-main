@@ -19,12 +19,26 @@ const getNetwork = (): Network => {
   }
 };
 
-// Initialize Aptos client with API key
+// Initialize Aptos client with Geomi-compatible API configuration
+// Geomi provides API infrastructure for Aptos development
 const config = new AptosConfig({
   network: getNetwork(),
+  // Use custom fullnode URL if provided (Geomi endpoints or Aptos Labs)
+  ...(process.env.NEXT_PUBLIC_APTOS_NODE_URL && {
+    fullnode: process.env.NEXT_PUBLIC_APTOS_NODE_URL,
+  }),
+  // Configure API keys for higher rate limits
   ...(process.env.NEXT_PUBLIC_APTOS_API_KEY && {
     clientConfig: {
       API_KEY: process.env.NEXT_PUBLIC_APTOS_API_KEY,
+      // Add headers for Geomi/Aptos Labs API authentication
+      HEADERS: {
+        "Authorization": `Bearer ${process.env.NEXT_PUBLIC_APTOS_API_KEY}`,
+        "X-Aptos-Key": process.env.NEXT_PUBLIC_APTOS_API_KEY,
+        ...(process.env.NEXT_PUBLIC_APTOS_SPONSOR_KEY && {
+          "X-Aptos-Sponsor-Key": process.env.NEXT_PUBLIC_APTOS_SPONSOR_KEY,
+        }),
+      },
     },
   }),
 });

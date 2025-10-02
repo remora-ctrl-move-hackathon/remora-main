@@ -1,6 +1,7 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect, Suspense } from "react"
+import { useSearchParams } from "next/navigation"
 import { Header } from "@/components/ui/header"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -22,8 +23,9 @@ import { useStreaming } from "@/hooks/useStreaming"
 import { STREAM_STATUS } from "@/config/aptos"
 import toast from "react-hot-toast"
 
-export default function Streams() {
+function StreamsContent() {
   const { connected } = useWallet()
+  const searchParams = useSearchParams()
   const { 
     loading,
     sentStreams,
@@ -44,6 +46,58 @@ export default function Streams() {
     durationType: "days",
     name: ""
   })
+
+  // Handle AI-driven parameters from URL
+  useEffect(() => {
+    const action = searchParams.get('action')
+    const recipient = searchParams.get('recipient')
+    const amount = searchParams.get('amount')
+    const duration = searchParams.get('duration')
+    const token = searchParams.get('token')
+    const aiIntent = searchParams.get('ai')
+
+    if (aiIntent === 'true' || action === 'create') {
+      // Parse duration string (e.g., "30 days", "2 months")
+      let durationValue = "30"
+      let durationType = "days"
+      
+      if (duration) {
+        const durationMatch = duration.match(/(\d+)\s*(day|hour|month|week|year)/i)
+        if (durationMatch) {
+          durationValue = durationMatch[1]
+          const unit = durationMatch[2].toLowerCase()
+          // Map to select options
+          if (unit === 'day' || unit === 'week') {
+            durationType = 'days'
+            if (unit === 'week') {
+              durationValue = String(parseInt(durationMatch[1]) * 7)
+            }
+          } else if (unit === 'hour') {
+            durationType = 'hours'
+          } else if (unit === 'month' || unit === 'year') {
+            durationType = 'months'
+            if (unit === 'year') {
+              durationValue = String(parseInt(durationMatch[1]) * 12)
+            }
+          }
+        }
+      }
+
+      setFormData({
+        receiver: recipient || "",
+        amount: amount || "100",
+        duration: durationValue,
+        durationType: durationType as any,
+        name: `AI Stream to ${recipient?.slice(0, 6) || 'recipient'}...`
+      })
+      
+      // Auto-open the dialog if AI sent the user here
+      if (aiIntent === 'true') {
+        setOpen(true)
+        toast.success("AI has pre-filled the stream details. Please review and confirm.")
+      }
+    }
+  }, [searchParams])
 
   const handleCreateStream = async () => {
     if (!connected) {
@@ -177,35 +231,37 @@ export default function Streams() {
                 Create Stream
               </Button>
             </DialogTrigger>
-            <DialogContent>
+            <DialogContent className="border-2 border-primary/20">
               <DialogHeader>
-                <DialogTitle>Create New Stream</DialogTitle>
-                <DialogDescription>
+                <DialogTitle className="text-foreground">Create New Stream</DialogTitle>
+                <DialogDescription className="text-muted-foreground">
                   Stream APT tokens over time to any wallet
                 </DialogDescription>
               </DialogHeader>
               <div className="space-y-4 py-4">
                 <div className="space-y-2">
-                  <Label htmlFor="receiver">Recipient Wallet Address</Label>
+                  <Label htmlFor="receiver" className="text-foreground">Recipient Wallet Address</Label>
                   <Input 
                     id="receiver" 
                     placeholder="0x..." 
                     value={formData.receiver}
                     onChange={(e) => setFormData({...formData, receiver: e.target.value})}
+                    className="border-border focus:border-primary"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="amount">Total Amount (APT)</Label>
+                  <Label htmlFor="amount" className="text-foreground">Total Amount (APT)</Label>
                   <Input 
                     id="amount" 
                     type="number" 
                     placeholder="100" 
                     value={formData.amount}
                     onChange={(e) => setFormData({...formData, amount: e.target.value})}
+                    className="border-border focus:border-primary"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="duration">Stream Duration</Label>
+                  <Label htmlFor="duration" className="text-foreground">Stream Duration</Label>
                   <div className="flex gap-2">
                     <Input 
                       id="duration" 
@@ -213,13 +269,13 @@ export default function Streams() {
                       placeholder="30" 
                       value={formData.duration}
                       onChange={(e) => setFormData({...formData, duration: e.target.value})}
-                      className="flex-1"
+                      className="flex-1 border-border focus:border-primary"
                     />
                     <Select 
                       value={formData.durationType}
                       onValueChange={(value) => setFormData({...formData, durationType: value})}
                     >
-                      <SelectTrigger className="w-[120px]">
+                      <SelectTrigger className="w-[120px] border-border">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -231,20 +287,25 @@ export default function Streams() {
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="name">Stream Name (Optional)</Label>
+                  <Label htmlFor="name" className="text-foreground">Stream Name (Optional)</Label>
                   <Input 
                     id="name" 
                     placeholder="e.g., Team Payroll" 
                     value={formData.name}
                     onChange={(e) => setFormData({...formData, name: e.target.value})}
+                    className="border-border focus:border-primary"
                   />
                 </div>
               </div>
               <div className="flex justify-end gap-3">
-                <Button variant="outline" onClick={() => setOpen(false)}>
+                <Button variant="outline" onClick={() => setOpen(false)} className="border-border">
                   Cancel
                 </Button>
-                <Button onClick={handleCreateStream} disabled={!formData.receiver || !formData.amount}>
+                <Button 
+                  onClick={handleCreateStream} 
+                  disabled={!formData.receiver || !formData.amount}
+                  className="bg-primary hover:bg-primary/90 text-white"
+                >
                   Create Stream
                 </Button>
               </div>
@@ -475,5 +536,13 @@ export default function Streams() {
         </Tabs>
       </div>
     </div>
+  )
+}
+
+export default function Streams() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <StreamsContent />
+    </Suspense>
   )
 }

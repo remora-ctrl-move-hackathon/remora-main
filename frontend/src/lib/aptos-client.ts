@@ -6,6 +6,7 @@ import {
 import type { 
   InputGenerateTransactionPayloadData
 } from "@aptos-labs/ts-sdk";
+import { apiCache, rateLimitTracker, withRetry } from "./api-cache";
 
 /**
  * AptosClient - Main client for interacting with Remora smart contracts
@@ -42,30 +43,57 @@ export class AptosClient {
     typeArguments?: string[];
     functionArguments: any[];
   }): Promise<any> {
+    // Create cache key from payload
+    const cacheKey = `view:${payload.function}:${JSON.stringify(payload.functionArguments)}`;
+    
+    // Check cache first
+    const cachedResult = apiCache.get(cacheKey);
+    if (cachedResult !== null) {
+      return cachedResult;
+    }
+
+    // Check rate limit
+    if (!rateLimitTracker.canMakeCall('view')) {
+      console.warn('Rate limit approaching, using cached data or defaults');
+      // Return default values based on function type
+      return this.getDefaultValue(payload.function);
+    }
+
     try {
+      // Track the API call
+      rateLimitTracker.trackCall('view');
+
       // Prepare headers with optional API key
       const headers: Record<string, string> = {
         "Content-Type": "application/json",
       };
       
-      // Add API key if available
+      // Add API keys if available
       if (process.env.NEXT_PUBLIC_APTOS_API_KEY) {
         headers["Authorization"] = `Bearer ${process.env.NEXT_PUBLIC_APTOS_API_KEY}`;
+        headers["X-Aptos-Key"] = process.env.NEXT_PUBLIC_APTOS_API_KEY;
+      }
+      
+      // Add sponsor key for sponsored transactions
+      if (process.env.NEXT_PUBLIC_APTOS_SPONSOR_KEY) {
+        headers["X-Aptos-Sponsor-Key"] = process.env.NEXT_PUBLIC_APTOS_SPONSOR_KEY;
       }
 
-      // Use the correct API for view function
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_APTOS_NODE_URL || "https://fullnode.testnet.aptoslabs.com/v1"}/view`,
-        {
-          method: "POST",
-          headers,
-          body: JSON.stringify({
-            function: payload.function,
-            type_arguments: payload.typeArguments || [],
-            arguments: payload.functionArguments,
-          }),
-        }
-      );
+      // Use the correct API for view function with retry
+      const response = await withRetry(async () => {
+        return await fetch(
+          `${process.env.NEXT_PUBLIC_APTOS_NODE_URL || "https://fullnode.testnet.aptoslabs.com/v1"}/view`,
+          {
+            method: "POST",
+            headers,
+            body: JSON.stringify({
+              function: payload.function,
+              type_arguments: payload.typeArguments || [],
+              arguments: payload.functionArguments,
+            }),
+          }
+        );
+      }, 2, 2000); // 2 retries with 2 second initial delay
 
       if (!response.ok) {
         const errorText = await response.text();
@@ -101,21 +129,44 @@ export class AptosClient {
       }
 
       const result = await response.json();
-      return result[0];
+      const data = result[0];
+      
+      // Cache successful result
+      apiCache.set(cacheKey, data, 30000); // Cache for 30 seconds
+      
+      return data;
     } catch (error) {
       console.error("Error calling view function:", error);
       // Return default values for common view functions to prevent app crashes
-      if (payload.function.includes("get_user_vaults") || 
-          payload.function.includes("get_user_sent_streams") ||
-          payload.function.includes("get_user_received_streams")) {
-        return [];
-      }
-      if (payload.function.includes("get_total") || 
-          payload.function.includes("get_balance")) {
-        return "0";
-      }
-      throw error;
+      return this.getDefaultValue(payload.function);
     }
+  }
+
+  /**
+   * Get default value based on function name
+   */
+  private getDefaultValue(functionName: string): any {
+    if (functionName.includes("get_user_vaults") || 
+        functionName.includes("get_user_sent_streams") ||
+        functionName.includes("get_user_received_streams") ||
+        functionName.includes("get_user_requests")) {
+      return [];
+    }
+    if (functionName.includes("get_total") || 
+        functionName.includes("get_balance") ||
+        functionName.includes("get_withdrawable") ||
+        functionName.includes("get_exchange_rate")) {
+      return "0";
+    }
+    if (functionName.includes("get_stream_info") ||
+        functionName.includes("get_vault_info") ||
+        functionName.includes("get_request_info")) {
+      return null;
+    }
+    if (functionName.includes("get_user_kyc_status")) {
+      return false;
+    }
+    return null;
   }
 
   /**

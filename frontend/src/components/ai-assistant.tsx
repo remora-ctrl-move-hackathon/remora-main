@@ -1,11 +1,13 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Card } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import { Bot, Send } from "lucide-react"
+import { Bot, Send, Sparkles, Loader2 } from "lucide-react"
 import toast from "react-hot-toast"
+import { geminiAI } from "@/services/gemini-ai.service"
+import { useRouter } from "next/navigation"
 
 interface AIMessage {
   role: 'user' | 'assistant'
@@ -18,60 +20,31 @@ interface AIMessage {
 
 export function AIAssistant() {
   const [messages, setMessages] = useState<AIMessage[]>([
-    { role: 'assistant', content: 'Hi! I can help you trade, stream payments, or manage vaults. Try "Buy 100 USDC of APT" or "Stream 50 USDC to alice.apt for 30 days"' }
+    { role: 'assistant', content: 'Hi! I\'m powered by Gemini AI. I can help you trade APT, open perpetuals up to 150x leverage, stream payments, or manage vaults. Try "Open a 10x long on APT" or "Buy 100 APT"' }
   ])
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
+  const router = useRouter()
+  
+  // Initialize Gemini AI
+  useEffect(() => {
+    geminiAI.initialize()
+  }, [])
 
-  const parseNaturalLanguage = (text: string) => {
-    const lowerText = text.toLowerCase()
-    
-    // Trading intents
-    if (lowerText.includes('buy') || lowerText.includes('sell') || lowerText.includes('trade')) {
-      const match = text.match(/(\d+)\s*(usdc|apt|usd)/i)
-      if (match) {
-        return {
-          type: 'trade' as const,
-          params: {
-            action: lowerText.includes('sell') ? 'sell' : 'buy',
-            amount: match[1],
-            token: match[2].toUpperCase()
-          }
-        }
+  const parseWithGemini = async (text: string) => {
+    try {
+      const intent = await geminiAI.parseUserIntent(text)
+      const response = await geminiAI.generateResponse(intent)
+      
+      return {
+        intent,
+        response,
+        suggestions: await geminiAI.suggestActions(text)
       }
+    } catch (error) {
+      console.error('Gemini AI error:', error)
+      return null
     }
-    
-    // Streaming intents
-    if (lowerText.includes('stream') || lowerText.includes('send')) {
-      const match = text.match(/(\d+)\s*(usdc|apt|usd)\s*to\s*(\S+)/i)
-      if (match) {
-        return {
-          type: 'stream' as const,
-          params: {
-            amount: match[1],
-            token: match[2].toUpperCase(),
-            recipient: match[3]
-          }
-        }
-      }
-    }
-    
-    // Vault intents
-    if (lowerText.includes('deposit') || lowerText.includes('withdraw')) {
-      const match = text.match(/(\d+)\s*(usdc|apt|usd)/i)
-      if (match) {
-        return {
-          type: 'vault' as const,
-          params: {
-            action: lowerText.includes('withdraw') ? 'withdraw' : 'deposit',
-            amount: match[1],
-            token: match[2].toUpperCase()
-          }
-        }
-      }
-    }
-    
-    return null
   }
 
   const handleSend = async () => {
@@ -82,48 +55,79 @@ export function AIAssistant() {
     setMessages(prev => [...prev, userMessage])
     setInput('')
     
-    // Parse intent
-    const action = parseNaturalLanguage(input)
+    // Use Gemini AI to parse and respond
+    const result = await parseWithGemini(input)
     
-    setTimeout(() => {
-      if (action) {
-        const response: AIMessage = {
-          role: 'assistant',
-          content: `I'll help you ${action.type} ${action.params.amount} ${action.params.token}. Please confirm this transaction:`,
-          action
+    if (result && result.intent) {
+      const response: AIMessage = {
+        role: 'assistant',
+        content: result.response || `I'll help you ${result.intent.type}. Ready to proceed?`,
+        action: {
+          type: result.intent.type as any,
+          params: result.intent.params as any
         }
-        setMessages(prev => [...prev, response])
-      } else {
-        setMessages(prev => [...prev, {
-          role: 'assistant',
-          content: 'I can help you with:\n• Trading: "Buy 100 USDC of APT"\n• Streaming: "Stream 50 USDC to alice.apt"\n• Vaults: "Deposit 1000 USDC to vault"'
-        }])
       }
-      setLoading(false)
-    }, 1000)
+      setMessages(prev => [...prev, response])
+      
+      // Auto-navigate for high confidence actions
+      if (result.intent.confidence > 0.8) {
+        if (result.intent.type === 'trade') {
+          setTimeout(() => {
+            router.push('/trading/advanced')
+          }, 1500)
+        } else if (result.intent.type === 'stream') {
+          // Navigate to streaming page with AI parameters
+          setTimeout(() => {
+            const params = new URLSearchParams({
+              ai: 'true',
+              action: 'create',
+              ...(result.intent.params?.recipient && { recipient: result.intent.params.recipient }),
+              ...(result.intent.params?.amount && { amount: result.intent.params.amount }),
+              ...(result.intent.params?.duration && { duration: result.intent.params.duration })
+            })
+            router.push(`/streams?${params.toString()}`)
+          }, 1500)
+        }
+      }
+    } else {
+      setMessages(prev => [...prev, {
+        role: 'assistant',
+        content: 'I can help you with:\n• Perpetual Trading: "Open 10x long on APT"\n• Spot Trading: "Buy 100 APT"\n• Payment Streams: "Stream 50 USDC to alice.apt"\n• Vault Management: "Deposit 1000 USDC"'
+      }])
+    }
+    setLoading(false)
   }
 
   return (
-    <Card className="fixed bottom-4 right-4 w-96 h-[500px] flex flex-col shadow-xl z-50">
-      <div className="p-4 border-b flex items-center gap-2">
-        <Bot className="h-5 w-5" />
-        <h3 className="font-semibold">Remora AI Assistant</h3>
+    <Card className="fixed bottom-4 right-4 w-96 h-[500px] flex flex-col shadow-xl z-50 border-2 border-primary/20">
+      <div className="p-4 border-b border-border flex items-center gap-2 bg-primary/5">
+        <Sparkles className="h-5 w-5 text-primary animate-pulse" />
+        <h3 className="font-semibold text-foreground">Gemini AI Assistant</h3>
       </div>
       
       <div className="flex-1 overflow-y-auto p-4 space-y-3">
         {messages.map((msg, i) => (
           <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
             <div className={`max-w-[80%] p-3 rounded-lg ${
-              msg.role === 'user' ? 'bg-primary text-primary-foreground' : 'bg-muted'
+              msg.role === 'user' ? 'bg-primary text-white' : 'bg-muted/50 border border-border'
             }`}>
               <p className="text-sm">{msg.content}</p>
               {msg.action && (
                 <Button 
                   size="sm" 
-                  className="mt-2"
-                  onClick={() => toast.success(`Executing ${msg.action?.type}...`)}
+                  className="mt-2 bg-primary hover:bg-primary/90 text-white"
+                  onClick={() => {
+                    toast.success(`Executing ${msg.action?.type}...`)
+                    if (msg.action?.type === 'trade') {
+                      router.push('/trading/advanced')
+                    } else if (msg.action?.type === 'stream') {
+                      router.push('/streaming')
+                    } else if (msg.action?.type === 'vault') {
+                      router.push('/vault')
+                    }
+                  }}
                 >
-                  Confirm Transaction
+                  Confirm & Execute
                 </Button>
               )}
             </div>
@@ -131,23 +135,30 @@ export function AIAssistant() {
         ))}
         {loading && (
           <div className="flex justify-start">
-            <div className="bg-muted p-3 rounded-lg">
-              <p className="text-sm">Thinking...</p>
+            <div className="bg-muted/50 p-3 rounded-lg border border-border flex items-center gap-2">
+              <Loader2 className="h-4 w-4 animate-spin text-primary" />
+              <p className="text-sm text-muted-foreground">Gemini is thinking...</p>
             </div>
           </div>
         )}
       </div>
       
-      <div className="p-4 border-t">
+      <div className="p-4 border-t border-border bg-background">
         <form onSubmit={(e) => { e.preventDefault(); handleSend() }} className="flex gap-2">
           <Input
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="Ask me anything..."
+            placeholder="Ask Gemini AI..."
             disabled={loading}
+            className="border-border focus:border-primary"
           />
-          <Button type="submit" size="icon" disabled={loading}>
-            <Send className="h-4 w-4" />
+          <Button 
+            type="submit" 
+            size="icon" 
+            disabled={loading}
+            className="bg-primary hover:bg-primary/90 text-white"
+          >
+            {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
           </Button>
         </form>
       </div>

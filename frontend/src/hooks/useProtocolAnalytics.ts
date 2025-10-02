@@ -51,20 +51,26 @@ export function useProtocolAnalytics() {
       ] = await Promise.allSettled([
         // Vault TVL
         aptos.view({
-          function: `${CONTRACTS.VAULT.MODULE}::${CONTRACTS.VAULT.VIEWS.GET_TOTAL_VALUE_LOCKED}`,
-          functionArguments: []
+          payload: {
+            function: `${CONTRACTS.VAULT.MODULE}::${CONTRACTS.VAULT.VIEWS.GET_TOTAL_VALUE_LOCKED}` as `${string}::${string}::${string}`,
+            functionArguments: []
+          }
         }).catch(() => [0]),
         
         // Streaming locked amount
         aptos.view({
-          function: `${CONTRACTS.STREAMING.MODULE}::${CONTRACTS.STREAMING.VIEWS.GET_TOTAL_LOCKED_AMOUNT}`,
-          functionArguments: []
+          payload: {
+            function: `${CONTRACTS.STREAMING.MODULE}::${CONTRACTS.STREAMING.VIEWS.GET_TOTAL_LOCKED_AMOUNT}` as `${string}::${string}::${string}`,
+            functionArguments: []
+          }
         }).catch(() => [0]),
         
         // Treasury balance (offramp)
         aptos.view({
-          function: `${CONTRACTS.OFFRAMP.MODULE}::${CONTRACTS.OFFRAMP.VIEWS.GET_TREASURY_BALANCE}`,
-          functionArguments: []
+          payload: {
+            function: `${CONTRACTS.OFFRAMP.MODULE}::${CONTRACTS.OFFRAMP.VIEWS.GET_TREASURY_BALANCE}` as `${string}::${string}::${string}`,
+            functionArguments: []
+          }
         }).catch(() => [0])
       ])
 

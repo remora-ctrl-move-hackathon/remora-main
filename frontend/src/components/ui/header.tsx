@@ -4,6 +4,7 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { WalletButton } from "@/components/ui/wallet-button"
 import { CommandBar } from "@/components/ui/command-bar"
+import { SponsorIndicator } from "@/components/ui/sponsor-indicator"
 
 export function Header() {
   const pathname = usePathname()
@@ -62,6 +63,7 @@ export function Header() {
             </nav>
           </div>
           <div className="flex items-center gap-3">
+            <SponsorIndicator />
             <CommandBar />
             <WalletButton />
           </div>

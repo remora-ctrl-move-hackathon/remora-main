@@ -1,12 +1,15 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import { useWallet } from "@aptos-labs/wallet-adapter-react";
 import { streamingService, Stream, CreateStreamParams } from "@/services/streaming.service";
+import { useSponsoredTransactions } from "@/hooks/useSponsoredTransactions";
+import { CONTRACTS } from "@/config/aptos";
 import toast from "react-hot-toast";
 
 export function useStreaming() {
   const { account, signAndSubmitTransaction } = useWallet();
+  const { executeSponsoredTransaction, isSponsored } = useSponsoredTransactions();
   const [loading, setLoading] = useState(false);
   const [sentStreams, setSentStreams] = useState<Stream[]>([]);
   const [receivedStreams, setReceivedStreams] = useState<Stream[]>([]);
@@ -58,7 +61,7 @@ export function useStreaming() {
     }
   }, [account, lastFetchTime]);
 
-  // Create a new stream
+  // Create a new stream with sponsored transaction support
   const createStream = useCallback(async (params: CreateStreamParams) => {
     if (!account || !signAndSubmitTransaction) {
       toast.error("Please connect your wallet");
@@ -71,19 +74,44 @@ export function useStreaming() {
       
       console.log("Transaction payload:", payload); // Debug log
       
-      // The wallet adapter expects the payload directly
-      const response = await signAndSubmitTransaction({
-        data: payload,
-      });
+      let txHash: string | undefined;
+      
+      // Try sponsored transaction first
+      if (isSponsored) {
+        const sponsoredTxHash = await executeSponsoredTransaction(payload, {
+          showToast: false,
+          functionName: `${CONTRACTS.STREAMING.MODULE}::${CONTRACTS.STREAMING.FUNCTIONS.CREATE_STREAM}`,
+        });
+        
+        if (sponsoredTxHash) {
+          txHash = sponsoredTxHash;
+          toast.success(
+            <div>
+              <div>Stream created successfully!</div>
+              <div className="text-xs text-muted-foreground mt-1">
+                Gas fees sponsored ✨
+              </div>
+            </div>
+          );
+        }
+      }
+      
+      // Fallback to regular transaction if sponsored fails
+      if (!txHash) {
+        const response = await signAndSubmitTransaction({
+          data: payload,
+        });
+        txHash = response.hash;
+        toast.success("Stream created successfully!");
+      }
 
       // Wait for transaction to be confirmed
       await new Promise(resolve => setTimeout(resolve, 2000));
-      toast.success("Stream created successfully!");
       
       // Refresh streams
       await fetchUserStreams();
       
-      return response.hash;
+      return txHash;
     } catch (error: any) {
       console.error("Error creating stream:", error);
       toast.error(error.message || "Failed to create stream");
@@ -91,7 +119,7 @@ export function useStreaming() {
     } finally {
       setLoading(false);
     }
-  }, [account, signAndSubmitTransaction, fetchUserStreams]);
+  }, [account, signAndSubmitTransaction, executeSponsoredTransaction, isSponsored, fetchUserStreams]);
 
   // Withdraw from stream
   const withdrawFromStream = useCallback(async (streamId: number) => {
