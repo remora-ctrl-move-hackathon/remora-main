@@ -4,6 +4,37 @@ import Link from "next/link"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { ArrowRight, Zap, Shield, TrendingUp, Globe } from "lucide-react"
+import { motion } from "framer-motion"
+
+const fadeInUp = {
+  initial: { opacity: 0, y: 20 },
+  animate: { opacity: 1, y: 0 },
+  transition: { duration: 0.8 }
+}
+
+const fadeIn = {
+  initial: { opacity: 0 },
+  animate: { opacity: 1 },
+  transition: { duration: 1.0 }
+}
+
+const slideInLeft = {
+  initial: { opacity: 0, x: -50 },
+  animate: { opacity: 1, x: 0 },
+  transition: { duration: 1.2, ease: "easeOut" }
+}
+
+const slideInRight = {
+  initial: { opacity: 0, x: 50 },
+  animate: { opacity: 1, x: 0 },
+  transition: { duration: 1.2, ease: "easeOut" }
+}
+
+const scaleIn = {
+  initial: { opacity: 0, scale: 0.9 },
+  animate: { opacity: 1, scale: 1 },
+  transition: { duration: 1.0, ease: "easeOut" }
+}
 
 export default function Landing() {
   return (
@@ -11,7 +42,12 @@ export default function Landing() {
       {/* Hero Section with Header */}
       <main className="bg-teal-700">
         {/* Header */}
-        <header className="border-b border-white/10">
+        <motion.header 
+          className="border-b border-white/10"
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+        >
           <div className="max-w-7xl mx-auto px-8 py-6">
             <div className="flex items-center justify-between">
               <div className="text-2xl font-light text-white">REMORA</div>
@@ -24,21 +60,36 @@ export default function Landing() {
               </Link>
             </div>
           </div>
-        </header>
+        </motion.header>
         <div className="py-32">
           <div className="max-w-7xl mx-auto px-8">
             <div className="max-w-4xl text-white">
-              <h1 className="text-6xl md:text-8xl font-extralight mb-8 leading-tight">
+              <motion.h1 
+                className="text-6xl md:text-8xl font-extralight mb-8 leading-tight"
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8, delay: 0.2 }}
+              >
                 Access Your Funds,<br />
                 Anytime, Anywhere.
-              </h1>
+              </motion.h1>
               
-              <p className="text-xl text-white/80 max-w-3xl mb-12 leading-relaxed">
+              <motion.p 
+                className="text-xl text-white/80 max-w-3xl mb-12 leading-relaxed"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8, delay: 0.4 }}
+              >
                 Stream payments, trade perpetuals, and manage vaults across the globe. 
                 Work anywhere without worrying about outdated financial systems.
-              </p>
+              </motion.p>
               
-              <div className="flex gap-4 mb-16">
+              <motion.div 
+                className="flex gap-4 mb-16"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8, delay: 0.6 }}
+              >
                 <Link href="/">
                   <Button 
                     size="lg"
@@ -56,33 +107,51 @@ export default function Landing() {
                     Learn More
                   </Button>
                 </Link>
-              </div>
+              </motion.div>
 
               {/* Key Features Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-8 pb-32">
-                <div className="p-6 bg-white/10 rounded-xl backdrop-blur-sm">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-8 pb-40">
+                <motion.div 
+                  className="p-6 bg-white/10 rounded-xl backdrop-blur-sm"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.6, delay: 0.8 }}
+                  whileHover={{ scale: 1.05 }}
+                >
                   <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center mb-4">
                     <TrendingUp className="h-6 w-6 text-white" />
                   </div>
                   <h3 className="text-lg font-medium text-white mb-2">150x Leverage</h3>
                   <p className="text-sm text-white/70">Trade perpetuals with industry-leading leverage and deep liquidity</p>
-                </div>
+                </motion.div>
                 
-                <div className="p-6 bg-white/10 rounded-xl backdrop-blur-sm">
+                <motion.div 
+                  className="p-6 bg-white/10 rounded-xl backdrop-blur-sm"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.6, delay: 1.0 }}
+                  whileHover={{ scale: 1.05 }}
+                >
                   <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center mb-4">
                     <Zap className="h-6 w-6 text-white" />
                   </div>
                   <h3 className="text-lg font-medium text-white mb-2">Real-Time Streaming</h3>
                   <p className="text-sm text-white/70">Programmable money flows that work 24/7 automatically</p>
-                </div>
+                </motion.div>
                 
-                <div className="p-6 bg-white/10 rounded-xl backdrop-blur-sm">
+                <motion.div 
+                  className="p-6 bg-white/10 rounded-xl backdrop-blur-sm"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.6, delay: 1.2 }}
+                  whileHover={{ scale: 1.05 }}
+                >
                   <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center mb-4">
                     <Globe className="h-6 w-6 text-white" />
                   </div>
                   <h3 className="text-lg font-medium text-white mb-2">Global Remittance</h3>
                   <p className="text-sm text-white/70">Send money anywhere with instant fiat off-ramps</p>
-                </div>
+                </motion.div>
               </div>
             </div>
           </div>
@@ -90,10 +159,15 @@ export default function Landing() {
       </main>
 
       {/* Feature Section 1 */}
-      <section className="py-32 bg-white">
+      <section className="py-48 bg-white">
         <div className="max-w-7xl mx-auto px-8">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-            <div>
+          <motion.div 
+            className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center"
+            initial="initial"
+            whileInView="animate"
+            viewport={{ once: true, margin: "-100px" }}
+          >
+            <motion.div variants={slideInLeft}>
               <div className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-teal-800/10 text-teal-800 mb-6">
                 <Shield className="h-3 w-3 mr-2" />
                 Enterprise-Grade Protection
@@ -115,36 +189,50 @@ export default function Landing() {
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </button>
               </Link>
-            </div>
+            </motion.div>
             
-            <div className="relative flex items-center justify-center">
+            <motion.div 
+              className="relative flex items-center justify-center"
+              variants={scaleIn}
+            >
               <Image 
                 src="/Satoshi_Complete/LockImage.png" 
                 alt="Security" 
-                width={400} 
-                height={400}
+                width={500} 
+                height={500}
                 className="object-contain"
               />
-            </div>
-          </div>
+            </motion.div>
+          </motion.div>
         </div>
       </section>
 
       {/* Feature Section 2 */}
-      <section className="py-32 bg-teal-800/5">
+      <section className="py-48 bg-teal-800/5">
         <div className="max-w-7xl mx-auto px-8">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-            <div className="order-2 lg:order-1 flex items-center justify-center">
+          <motion.div 
+            className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center"
+            initial="initial"
+            whileInView="animate"
+            viewport={{ once: true, margin: "-100px" }}
+          >
+            <motion.div 
+              className="order-2 lg:order-1 flex items-center justify-center"
+              variants={scaleIn}
+            >
               <Image 
                 src="/Satoshi_Complete/Trading.png" 
                 alt="Trading" 
-                width={400} 
-                height={400}
+                width={500} 
+                height={500}
                 className="object-contain"
               />
-            </div>
+            </motion.div>
             
-            <div className="order-1 lg:order-2">
+            <motion.div 
+              className="order-1 lg:order-2"
+              variants={slideInRight}
+            >
               <div className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-teal-800/10 text-teal-800 mb-6">
                 <TrendingUp className="h-3 w-3 mr-2" />
                 Advanced Trading
@@ -166,16 +254,21 @@ export default function Landing() {
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </button>
               </Link>
-            </div>
-          </div>
+            </motion.div>
+          </motion.div>
         </div>
       </section>
 
       {/* Feature Section 3 */}
-      <section className="py-32 bg-white">
+      <section className="py-48 bg-white">
         <div className="max-w-7xl mx-auto px-8">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-            <div>
+          <motion.div 
+            className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center"
+            initial="initial"
+            whileInView="animate"
+            viewport={{ once: true, margin: "-100px" }}
+          >
+            <motion.div variants={slideInLeft}>
               <div className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-teal-800/10 text-teal-800 mb-6">
                 <Globe className="h-3 w-3 mr-2" />
                 Global Remittance
@@ -197,24 +290,33 @@ export default function Landing() {
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </button>
               </Link>
-            </div>
+            </motion.div>
             
-            <div className="relative flex items-center justify-center">
+            <motion.div 
+              className="relative flex items-center justify-center"
+              variants={scaleIn}
+            >
               <Image 
                 src="/Satoshi_Complete/Payment.png" 
                 alt="Global Remittance" 
-                width={400} 
-                height={400}
+                width={500} 
+                height={500}
                 className="object-contain"
               />
-            </div>
-          </div>
+            </motion.div>
+          </motion.div>
         </div>
       </section>
 
       {/* CTA Section */}
-      <section className="py-32 bg-teal-800">
-        <div className="max-w-4xl mx-auto px-8 text-center">
+      <section className="py-48 bg-teal-800">
+        <motion.div 
+          className="max-w-4xl mx-auto px-8 text-center"
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 1.2, ease: "easeOut" }}
+        >
           <h2 className="text-4xl md:text-5xl font-light text-white mb-6">
             Ready to get started?
           </h2>
@@ -230,12 +332,18 @@ export default function Landing() {
               <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
           </Link>
-        </div>
+        </motion.div>
       </section>
 
       {/* Footer */}
       <footer className="border-t border-teal-800/10 py-12 bg-white">
-        <div className="max-w-7xl mx-auto px-8">
+        <motion.div 
+          className="max-w-7xl mx-auto px-8"
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true }}
+          transition={{ duration: 1.0 }}
+        >
           <div className="flex items-center justify-between">
             <div className="text-teal-800/60 text-sm">
               © 2025 Remora Finance. Built on Aptos.
@@ -246,7 +354,7 @@ export default function Landing() {
               <Link href="https://discord.com" className="hover:text-teal-800">Discord</Link>
             </div>
           </div>
-        </div>
+        </motion.div>
       </footer>
     </div>
   )

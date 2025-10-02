@@ -97,11 +97,15 @@ export class VaultService {
    * Withdraw funds from a vault
    */
   async withdrawFromVault(vaultId: number, sharesToRedeem: number): Promise<InputGenerateTransactionPayloadData> {
+    // sharesToRedeem is already in decimal format (e.g., 0.5 for 0.5 shares)
+    // Convert to the smallest unit (8 decimals for APT)
+    const sharesInSmallestUnit = Math.floor(sharesToRedeem * 1e8);
+    
     return aptosClient.buildTransaction({
       function: `${CONTRACTS.VAULT.MODULE}::${CONTRACTS.VAULT.FUNCTIONS.WITHDRAW_FROM_VAULT}` as `${string}::${string}::${string}`,
       functionArguments: [
         vaultId.toString(),
-        formatAptAmount(sharesToRedeem).toString(),
+        sharesInSmallestUnit.toString(),
         this.moduleOwner,
       ],
     });

@@ -3,6 +3,7 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { WalletButton } from "@/components/ui/wallet-button"
+import { CommandBar } from "@/components/ui/command-bar"
 
 export function Header() {
   const pathname = usePathname()
@@ -46,9 +47,24 @@ export function Header() {
               >
                 Analytics
               </Link>
+              <Link 
+                href="/trading/advanced"
+                className={`text-sm font-light ${isActive("/trading/advanced") ? "text-primary font-normal" : "text-muted-foreground hover:text-foreground"} transition-all duration-200`}
+              >
+                Advanced
+              </Link>
+              <Link 
+                href="/api/dashboard"
+                className={`text-sm font-light ${isActive("/api/dashboard") ? "text-primary font-normal" : "text-muted-foreground hover:text-foreground"} transition-all duration-200`}
+              >
+                API
+              </Link>
             </nav>
           </div>
-          <WalletButton />
+          <div className="flex items-center gap-3">
+            <CommandBar />
+            <WalletButton />
+          </div>
         </div>
       </div>
     </header>

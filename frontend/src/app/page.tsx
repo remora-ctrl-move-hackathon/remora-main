@@ -16,6 +16,7 @@ import { Badge } from "@/components/ui/badge"
 import { useStreaming } from "@/hooks/useStreaming"
 import { STREAM_STATUS } from "@/config/aptos"
 import Link from "next/link"
+import { LiveIndicator, AnimatedNumber } from "@/components/ui/live-indicator"
 
 interface DisplayStream {
   id: number
@@ -102,16 +103,16 @@ export default function Home() {
     }, 0)
 
     return {
-      totalVolume: `${totalStreamingOut.toFixed(4)} APT`,
-      activeStreams: activeStreamCount.toString(),
-      totalRemittance: `${availableToWithdraw.toFixed(4)} APT`
+      totalVolume: totalStreamingOut,
+      activeStreams: activeStreamCount,
+      totalRemittance: availableToWithdraw
     }
   }
 
   const stats = account ? calculateStats() : {
-    totalVolume: "0.0000 APT",
-    activeStreams: "0",
-    totalRemittance: "0.0000 APT"
+    totalVolume: 0,
+    activeStreams: 0,
+    totalRemittance: 0
   }
 
   // Format streams for display
@@ -139,24 +140,35 @@ export default function Home() {
           <div className="max-w-screen-xl mx-auto px-8 py-12">
             <div className="flex items-center justify-between mb-10">
               <h1 className="text-base font-light text-slate-300 uppercase tracking-widest">MAIN MARKET</h1>
-              <Badge variant="outline" className="text-xs border-white/30 text-white font-light bg-white/10">
-                <div className="w-2 h-2 rounded-full bg-white animate-pulse mr-2" />
-                Live
-              </Badge>
+              <LiveIndicator className="text-white" />
             </div>
             
             <div className="grid grid-cols-3 gap-12">
               <div>
                 <p className="text-xs text-slate-400 mb-3 uppercase tracking-wider font-light">Total Streaming Out</p>
-                <p className="text-4xl font-extralight tracking-tight text-white">{stats.totalVolume}</p>
+                <AnimatedNumber 
+                  value={stats.totalVolume} 
+                  decimals={4} 
+                  suffix=" APT"
+                  className="text-4xl font-extralight tracking-tight text-white"
+                />
               </div>
               <div>
                 <p className="text-xs text-slate-400 mb-3 uppercase tracking-wider font-light">Active Streams</p>
-                <p className="text-4xl font-extralight tracking-tight text-white">{stats.activeStreams}</p>
+                <AnimatedNumber 
+                  value={stats.activeStreams} 
+                  decimals={0}
+                  className="text-4xl font-extralight tracking-tight text-white"
+                />
               </div>
               <div>
                 <p className="text-xs text-slate-400 mb-3 uppercase tracking-wider font-light">Available to Withdraw</p>
-                <p className="text-4xl font-extralight tracking-tight text-white">{stats.totalRemittance}</p>
+                <AnimatedNumber 
+                  value={stats.totalRemittance} 
+                  decimals={4} 
+                  suffix=" APT"
+                  className="text-4xl font-extralight tracking-tight text-white"
+                />
               </div>
             </div>
           </div>

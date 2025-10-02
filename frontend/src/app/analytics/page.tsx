@@ -191,14 +191,14 @@ export default function Analytics() {
       <div className="max-w-screen-xl mx-auto px-8 py-12">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-2xl font-light text-gray-900">Analytics</h1>
+          <h1 className="text-2xl font-light text-foreground">Analytics</h1>
         </div>
 
         {/* Connect Wallet Message */}
         <div className="text-center py-16 border border-gray-200 rounded-lg mb-8">
-          <Wallet className="h-8 w-8 text-gray-400 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">Connect Wallet</h3>
-          <p className="text-sm text-gray-500">Connect your wallet to view portfolio analytics</p>
+          <Wallet className="h-8 w-8 text-muted-foreground-400 mx-auto mb-4" />
+          <h3 className="text-lg font-medium text-foreground mb-2">Connect Wallet</h3>
+          <p className="text-sm text-muted-foreground-500">Connect your wallet to view portfolio analytics</p>
         </div>
 
         {/* Protocol Overview */}
@@ -248,7 +248,7 @@ export default function Analytics() {
                 {portfolioBreakdown.map((item, index) => (
                   <div key={index}>
                     <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm font-light text-gray-600">{item.asset}</span>
+                      <span className="text-sm font-light text-muted-foreground-600">{item.asset}</span>
                       <span className="text-sm font-mono">${item.value.toLocaleString()}</span>
                     </div>
                     <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
@@ -257,13 +257,13 @@ export default function Analytics() {
                         style={{ width: `${item.percentage}%` }}
                       />
                     </div>
-                    <div className="text-xs text-gray-400 font-light mt-1">{item.percentage}% of portfolio</div>
+                    <div className="text-xs text-muted-foreground-400 font-light mt-1">{item.percentage}% of portfolio</div>
                   </div>
                 ))}
               </div>
               <div className="mt-6 pt-6 border-t border-border/30">
                 <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-500 font-light">Total Value</span>
+                  <span className="text-sm text-muted-foreground-500 font-light">Total Value</span>
                   <span className="text-xl font-light">$101,000</span>
                 </div>
               </div>
@@ -287,13 +287,13 @@ export default function Analytics() {
                         <source.icon className="h-5 w-5 text-primary" strokeWidth={1.5} />
                       </div>
                       <div>
-                        <p className="text-sm font-normal text-gray-900">{source.source}</p>
-                        <p className="text-xs text-gray-500 font-light">{source.value}</p>
+                        <p className="text-sm font-normal text-foreground">{source.source}</p>
+                        <p className="text-xs text-muted-foreground-500 font-light">{source.value}</p>
                       </div>
                     </div>
                     <div className="text-right">
-                      <p className="text-lg font-light text-green-600">{source.apy}</p>
-                      <p className="text-xs text-gray-400 font-light">APY</p>
+                      <p className="text-lg font-light text-primary">{source.apy}</p>
+                      <p className="text-xs text-muted-foreground-400 font-light">APY</p>
                     </div>
                   </div>
                 </div>
@@ -321,18 +321,18 @@ export default function Analytics() {
                   <div key={activity.id} className="p-3 rounded-xl border border-border/30 hover:border-primary/30 transition-all">
                     <div className="flex items-start justify-between mb-2">
                       <div>
-                        <p className="text-sm font-normal text-gray-900">{activity.type}</p>
-                        <p className="text-xs text-gray-500 font-light">{activity.details}</p>
+                        <p className="text-sm font-normal text-foreground">{activity.type}</p>
+                        <p className="text-xs text-muted-foreground-500 font-light">{activity.details}</p>
                       </div>
                       <Badge className={`text-xs font-light ${
-                        activity.status === 'success' ? 'bg-green-50 text-green-600' : 'bg-yellow-50 text-yellow-600'
+                        activity.status === 'success' ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'
                       } border-0`}>
                         {activity.status}
                       </Badge>
                     </div>
                     <div className="flex items-center justify-between text-xs">
-                      <span className="text-gray-400 font-light">{activity.time}</span>
-                      <span className="font-mono text-gray-500">{activity.txn}</span>
+                      <span className="text-muted-foreground-400 font-light">{activity.time}</span>
+                      <span className="font-mono text-muted-foreground-500">{activity.txn}</span>
                     </div>
                   </div>
                 ))}
@@ -360,8 +360,8 @@ export default function Analytics() {
         {/* Header */}
         <div className="flex items-center justify-between mb-10">
           <div>
-            <h1 className="text-3xl font-light text-gray-900">Analytics</h1>
-            <p className="text-sm text-gray-500 font-light mt-1">Protocol metrics & portfolio insights</p>
+            <h1 className="text-3xl font-light text-foreground">Analytics</h1>
+            <p className="text-sm text-muted-foreground-500 font-light mt-1">Protocol metrics & portfolio insights</p>
           </div>
           <Badge variant="outline" className="text-xs border-primary/20 text-primary font-light">
             <div className="w-2 h-2 rounded-full bg-primary animate-pulse mr-2" />
@@ -373,7 +373,7 @@ export default function Analytics() {
         {(loading || isLoading || protocolLoading) && (
           <div className="flex items-center justify-center py-20">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            <span className="ml-2 text-gray-600">Loading analytics...</span>
+            <span className="ml-2 text-muted-foreground-600">Loading analytics...</span>
           </div>
         )}
 
@@ -385,11 +385,11 @@ export default function Analytics() {
               {stats.map((stat, index) => (
                 <div key={index} className="p-4 bg-white border border-gray-100 rounded-lg">
                   <div className="flex items-center gap-3 mb-2">
-                    <stat.icon className="h-4 w-4 text-gray-600" strokeWidth={1.5} />
-                    <span className="text-xs text-gray-500 uppercase tracking-wide">{stat.label}</span>
+                    <stat.icon className="h-4 w-4 text-muted-foreground-600" strokeWidth={1.5} />
+                    <span className="text-xs text-muted-foreground-500 uppercase tracking-wide">{stat.label}</span>
                   </div>
-                  <p className="text-xl font-light text-gray-900">{stat.value}</p>
-                  <p className="text-xs text-gray-400 mt-1">{stat.subValue}</p>
+                  <p className="text-xl font-light text-foreground">{stat.value}</p>
+                  <p className="text-xs text-muted-foreground-400 mt-1">{stat.subValue}</p>
                 </div>
               ))}
             </div>
@@ -397,32 +397,32 @@ export default function Analytics() {
             {/* Protocol Overview */}
             <div className="mb-8">
               <div className="flex items-center gap-2 mb-4">
-                <h3 className="text-sm font-medium text-gray-900">Protocol</h3>
-                {protocolLoading && <Loader2 className="h-3 w-3 animate-spin text-gray-400" />}
+                <h3 className="text-sm font-medium text-foreground">Protocol</h3>
+                {protocolLoading && <Loader2 className="h-3 w-3 animate-spin text-muted-foreground-400" />}
               </div>
               <div className="grid grid-cols-3 md:grid-cols-6 gap-4">
                 <div className="text-center">
-                  <p className="text-xs text-gray-500 mb-1">TVL</p>
+                  <p className="text-xs text-muted-foreground-500 mb-1">TVL</p>
                   <p className="text-lg font-light">{protocolMetrics.tvl}</p>
                 </div>
                 <div className="text-center">
-                  <p className="text-xs text-gray-500 mb-1">Volume</p>
+                  <p className="text-xs text-muted-foreground-500 mb-1">Volume</p>
                   <p className="text-lg font-light">{protocolMetrics.volume24h}</p>
                 </div>
                 <div className="text-center">
-                  <p className="text-xs text-gray-500 mb-1">Streams</p>
+                  <p className="text-xs text-muted-foreground-500 mb-1">Streams</p>
                   <p className="text-lg font-light">{protocolMetrics.totalStreams}</p>
                 </div>
                 <div className="text-center">
-                  <p className="text-xs text-gray-500 mb-1">Users</p>
+                  <p className="text-xs text-muted-foreground-500 mb-1">Users</p>
                   <p className="text-lg font-light">{protocolMetrics.activeUsers}</p>
                 </div>
                 <div className="text-center">
-                  <p className="text-xs text-gray-500 mb-1">APY</p>
+                  <p className="text-xs text-muted-foreground-500 mb-1">APY</p>
                   <p className="text-lg font-light">{protocolMetrics.avgAPY}</p>
                 </div>
                 <div className="text-center">
-                  <p className="text-xs text-gray-500 mb-1">Revenue</p>
+                  <p className="text-xs text-muted-foreground-500 mb-1">Revenue</p>
                   <p className="text-lg font-light">{protocolMetrics.protocolRevenue}</p>
                 </div>
               </div>
@@ -431,21 +431,21 @@ export default function Analytics() {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
               {/* Portfolio Breakdown */}
               <div>
-                <h3 className="text-sm font-medium text-gray-900 mb-4">Portfolio</h3>
+                <h3 className="text-sm font-medium text-foreground mb-4">Portfolio</h3>
                 <div className="space-y-3">
                   {portfolioBreakdown.map((item, index) => (
                     <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                      <span className="text-sm text-gray-700">{item.asset}</span>
+                      <span className="text-sm text-foreground">{item.asset}</span>
                       <div className="text-right">
                         <span className="text-sm font-medium">${item.value.toLocaleString()}</span>
-                        <div className="text-xs text-gray-500">{item.percentage.toFixed(1)}%</div>
+                        <div className="text-xs text-muted-foreground-500">{item.percentage.toFixed(1)}%</div>
                       </div>
                     </div>
                   ))}
                 </div>
                 <div className="mt-4 pt-4 border-t border-gray-200">
                   <div className="flex justify-between items-center">
-                    <span className="text-sm text-gray-600">Total</span>
+                    <span className="text-sm text-muted-foreground-600">Total</span>
                     <span className="text-lg font-medium">${portfolioValue.toLocaleString()}</span>
                   </div>
                 </div>
@@ -453,21 +453,21 @@ export default function Analytics() {
 
               {/* Recent Activity */}
               <div>
-                <h3 className="text-sm font-medium text-gray-900 mb-4">Activity</h3>
+                <h3 className="text-sm font-medium text-foreground mb-4">Activity</h3>
                 <div className="space-y-2">
                   {recentActivity.slice(0, 5).map((activity) => (
                     <div key={activity.id} className="p-3 bg-gray-50 rounded-lg">
                       <div className="flex items-center justify-between mb-1">
-                        <span className="text-sm text-gray-900">{activity.type}</span>
-                        <span className="text-xs text-gray-500">{activity.time}</span>
+                        <span className="text-sm text-foreground">{activity.type}</span>
+                        <span className="text-xs text-muted-foreground-500">{activity.time}</span>
                       </div>
-                      <p className="text-xs text-gray-600">{activity.details}</p>
+                      <p className="text-xs text-muted-foreground-600">{activity.details}</p>
                     </div>
                   ))}
                 </div>
                 {recentActivity.length > 5 && (
                   <Link href="/transactions" className="block mt-4">
-                    <button className="text-xs text-gray-500 hover:text-gray-700">
+                    <button className="text-xs text-muted-foreground-500 hover:text-foreground">
                       View all activity →
                     </button>
                   </Link>
@@ -478,18 +478,18 @@ export default function Analytics() {
             {/* Trading Performance */}
             {positions.length > 0 && (
               <div className="mb-8">
-                <h3 className="text-sm font-medium text-gray-900 mb-4">Trading</h3>
+                <h3 className="text-sm font-medium text-foreground mb-4">Trading</h3>
                 <div className="grid grid-cols-3 gap-4">
                   <div className="text-center p-4 bg-gray-50 rounded-lg">
-                    <p className="text-xs text-gray-500 mb-1">Win Rate</p>
-                    <p className="text-lg font-light text-green-600">{tradingStats?.winRate.toFixed(1)}%</p>
+                    <p className="text-xs text-muted-foreground-500 mb-1">Win Rate</p>
+                    <p className="text-lg font-light text-primary">{tradingStats?.winRate.toFixed(1)}%</p>
                   </div>
                   <div className="text-center p-4 bg-gray-50 rounded-lg">
-                    <p className="text-xs text-gray-500 mb-1">Trades</p>
+                    <p className="text-xs text-muted-foreground-500 mb-1">Trades</p>
                     <p className="text-lg font-light">{tradingStats?.totalPositions || 0}</p>
                   </div>
                   <div className="text-center p-4 bg-gray-50 rounded-lg">
-                    <p className="text-xs text-gray-500 mb-1">Volume</p>
+                    <p className="text-xs text-muted-foreground-500 mb-1">Volume</p>
                     <p className="text-lg font-light">${tradingStats?.totalVolume.toLocaleString()}</p>
                   </div>
                 </div>
@@ -498,7 +498,7 @@ export default function Analytics() {
 
             {/* No Data State */}
             {positions.length === 0 && tradingHistory.length === 0 && (
-              <div className="text-center py-8 text-gray-500">
+              <div className="text-center py-8 text-muted-foreground-500">
                 <p className="text-sm">No trading data available.</p>
                 <p className="text-xs mt-1">Start trading to see analytics.</p>
               </div>
