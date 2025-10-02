@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Header } from "@/components/ui/header"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -27,10 +27,11 @@ import { AnimatedNumber } from "@/components/ui/live-indicator"
 
 export default function Vault() {
   const { connected } = useWallet()
-  const { 
+  const {
     loading,
     userVaults,
     managedVaults,
+    allVaults,
     totalValueLocked,
     createVault,
     depositToVault,
@@ -59,6 +60,25 @@ export default function Vault() {
 
   const [depositAmount, setDepositAmount] = useState("100")
   const [withdrawAmount, setWithdrawAmount] = useState("0")
+  const [cooldownEndTime, setCooldownEndTime] = useState<number | null>(null)
+  const [cooldownSeconds, setCooldownSeconds] = useState<number>(0)
+
+  // Cooldown timer effect
+  useEffect(() => {
+    if (!cooldownEndTime) return
+
+    const interval = setInterval(() => {
+      const remaining = Math.max(0, Math.ceil((cooldownEndTime - Date.now()) / 1000))
+      setCooldownSeconds(remaining)
+
+      if (remaining === 0) {
+        setCooldownEndTime(null)
+        clearInterval(interval)
+      }
+    }, 1000)
+
+    return () => clearInterval(interval)
+  }, [cooldownEndTime])
 
   const handleCreateVault = async () => {
     if (!connected) {
@@ -83,7 +103,10 @@ export default function Vault() {
         description: "",
         managementFee: "2",
         performanceFee: "20",
-        minDeposit: "100"
+        minDeposit: "100",
+        isMultiSig: false,
+        signers: [""],
+        threshold: "1"
       })
       
       toast.success("Vault created successfully!")
@@ -95,11 +118,24 @@ export default function Vault() {
   const handleDeposit = async () => {
     if (!selectedVault || !depositAmount) return
 
+    const amount = parseFloat(depositAmount)
+    const minInvestment = selectedVault.minInvestment || 0
+
+    if (amount < minInvestment) {
+      toast.error(`Minimum deposit is ${minInvestment} APT`)
+      return
+    }
+
     try {
-      await depositToVault(selectedVault.vaultId, parseFloat(depositAmount))
+      await depositToVault(selectedVault.vaultId, amount)
+
+      // Start 1-minute cooldown timer
+      const endTime = Date.now() + 60000 // 60 seconds
+      setCooldownEndTime(endTime)
+
       setOpenDeposit(false)
       setDepositAmount("100")
-      toast.success(`Deposited ${depositAmount} APT successfully!`)
+      toast.success(`Deposited ${depositAmount} APT successfully! You can withdraw after 1 minute.`)
     } catch (error: any) {
       toast.error(error.message || "Failed to deposit")
     }
@@ -150,21 +186,14 @@ export default function Vault() {
     }
   }
 
-  // Remove duplicates by vaultId when combining arrays
-  const allVaults = [...userVaults, ...managedVaults.filter(mv => 
-    !userVaults.some(uv => uv.vaultId === mv.vaultId)
-  )]
-  const displayVaults = activeTab === "all" ? allVaults : 
-                       activeTab === "invested" ? userVaults : managedVaults
+  // Display vaults based on active tab
+  const displayVaults = activeTab === "all" ? allVaults :
+                       activeTab === "invested" ? userVaults :
+                       activeTab === "managed" ? managedVaults : []
 
   // Calculate total stats
   const totalInvested = userVaults.reduce((acc, v) => acc + (v.totalValue || 0), 0)
-  const totalReturns = userVaults.reduce((acc, v) => {
-    // Since we don't have performance data, calculate based on totalValue for now
-    const returns = (v.totalValue || 0) * 0.05 // Assume 5% for demo
-    return acc + returns
-  }, 0)
-  const avgAPY = userVaults.length > 0 
+  const avgAPY = userVaults.length > 0
     ? 8.5 // Static demo value since performance not in interface
     : 0
 
@@ -439,12 +468,6 @@ export default function Vault() {
                           </CardDescription>
                         </div>
                         <div className="flex items-center gap-2">
-                          {vault.isMultiSig && (
-                            <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                              <Shield className="h-3 w-3" />
-                              Multi-sig
-                            </div>
-                          )}
                           {getStatusBadge(vault.status)}
                         </div>
                       </div>
@@ -540,12 +563,6 @@ export default function Vault() {
                           </CardDescription>
                         </div>
                         <div className="flex items-center gap-2">
-                          {vault.isMultiSig && (
-                            <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                              <Shield className="h-3 w-3" />
-                              Multi-sig
-                            </div>
-                          )}
                           {getStatusBadge(vault.status)}
                         </div>
                       </div>
@@ -643,12 +660,6 @@ export default function Vault() {
                           </CardDescription>
                         </div>
                         <div className="flex items-center gap-2">
-                          {vault.isMultiSig && (
-                            <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                              <Shield className="h-3 w-3" />
-                              Multi-sig
-                            </div>
-                          )}
                           {getStatusBadge(vault.status)}
                         </div>
                       </div>
@@ -799,21 +810,34 @@ export default function Vault() {
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4 py-4">
+              {/* Cooldown Warning */}
+              {cooldownSeconds > 0 && (
+                <div className="p-3 bg-yellow-500/10 border border-yellow-500/50 rounded-lg">
+                  <p className="text-sm text-yellow-600 dark:text-yellow-400 font-medium">
+                    ⏱️ Withdrawal Cooldown Active
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    You can withdraw in {cooldownSeconds} second{cooldownSeconds !== 1 ? 's' : ''}
+                  </p>
+                </div>
+              )}
+
               <div className="space-y-2">
                 <Label htmlFor="withdrawAmount">Shares to Withdraw</Label>
-                <Input 
-                  id="withdrawAmount" 
-                  type="number" 
-                  placeholder="0" 
+                <Input
+                  id="withdrawAmount"
+                  type="number"
+                  placeholder="0"
                   value={withdrawAmount}
                   onChange={(e) => setWithdrawAmount(e.target.value)}
                   max={userShares}
+                  disabled={cooldownSeconds > 0}
                 />
                 <p className="text-xs text-muted-foreground">
                   Your shares: {userShares.toFixed(6)}
                 </p>
               </div>
-              
+
               {selectedVault && userShares > 0 && (
                 <div className="p-3 bg-muted rounded-lg space-y-2 text-sm">
                   <div className="flex justify-between">
@@ -876,9 +900,9 @@ export default function Vault() {
               <Button variant="outline" onClick={() => setOpenWithdraw(false)}>
                 Cancel
               </Button>
-              <Button 
-                onClick={handleWithdraw} 
-                disabled={!withdrawAmount || parseFloat(withdrawAmount) <= 0 || parseFloat(withdrawAmount) > userShares}
+              <Button
+                onClick={handleWithdraw}
+                disabled={!withdrawAmount || parseFloat(withdrawAmount) <= 0 || parseFloat(withdrawAmount) > userShares || cooldownSeconds > 0}
               >
                 Withdraw
               </Button>
