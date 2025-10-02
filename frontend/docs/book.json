@@ -1,0 +1,174 @@
+{
+  "title": "Remora Finance Documentation",
+  "description": "Comprehensive documentation for the Remora DeFi platform on Aptos blockchain",
+  "author": "Remora Finance Team",
+  "language": "en",
+  "gitbook": ">=3.2.0",
+  
+  "plugins": [
+    "search",
+    "lunr",
+    "sharing",
+    "fontsettings",
+    "theme-default",
+    "code",
+    "mermaid-gb3",
+    "prism",
+    "katex",
+    "copy-code-button",
+    "back-to-top-button",
+    "github",
+    "edit-link",
+    "anchors",
+    "expandable-chapters",
+    "hide-element",
+    "todo",
+    "chart",
+    "advanced-emoji",
+    "emphasize",
+    "accordion",
+    "callouts",
+    "alerts",
+    "include-codeblock",
+    "page-toc-button",
+    "splitter",
+    "tbfed-pagefooter"
+  ],
+  
+  "pluginsConfig": {
+    "github": {
+      "url": "https://github.com/remora-ctrl-move-hackathon/remora-main"
+    },
+    
+    "edit-link": {
+      "base": "https://github.com/remora-ctrl-move-hackathon/remora-main/tree/main/frontend/docs",
+      "label": "Edit This Page"
+    },
+    
+    "sharing": {
+      "facebook": true,
+      "twitter": true,
+      "google": false,
+      "weibo": false,
+      "instapaper": false,
+      "vk": false,
+      "all": ["facebook", "google", "twitter", "weibo", "instapaper"]
+    },
+    
+    "fontsettings": {
+      "theme": "white",
+      "family": "sans",
+      "size": 2
+    },
+    
+    "theme-default": {
+      "showLevel": false
+    },
+    
+    "prism": {
+      "css": ["prism-themes/themes/prism-ghcolors.css"],
+      "lang": {
+        "typescript": "typescript",
+        "javascript": "javascript",
+        "bash": "bash",
+        "json": "json",
+        "yaml": "yaml"
+      }
+    },
+    
+    "copy-code-button": {
+      "copyText": "Copy",
+      "copiedText": "Copied!",
+      "copyTextSelector": ".copy-text",
+      "copiedTextSelector": ".copied-text"
+    },
+    
+    "hide-element": {
+      "elements": [".gitbook-link"]
+    },
+    
+    "callouts": {
+      "showTypeInTitle": false
+    },
+    
+    "alerts": {
+      "info": {
+        "label": "Info",
+        "icon": "fa fa-info-circle",
+        "className": "alert-info"
+      },
+      "warning": {
+        "label": "Warning", 
+        "icon": "fa fa-exclamation-triangle",
+        "className": "alert-warning"
+      },
+      "danger": {
+        "label": "Danger",
+        "icon": "fa fa-exclamation-circle",
+        "className": "alert-danger"
+      },
+      "success": {
+        "label": "Success",
+        "icon": "fa fa-check-circle",
+        "className": "alert-success"
+      }
+    },
+    
+    "page-toc-button": {
+      "maxTocDepth": 2,
+      "minTocSize": 2
+    },
+    
+    "tbfed-pagefooter": {
+      "copyright": "Copyright © 2024 Remora Finance",
+      "modify_label": "Last updated: ",
+      "modify_format": "YYYY-MM-DD HH:mm:ss"
+    },
+    
+    "mermaid-gb3": {
+      "theme": "default"
+    }
+  },
+  
+  "variables": {
+    "app_name": "Remora Finance",
+    "app_url": "https://app.remora.finance",
+    "docs_url": "https://docs.remora.finance",
+    "github_url": "https://github.com/remora-ctrl-move-hackathon/remora-main",
+    "discord_url": "https://discord.gg/remora",
+    "twitter_url": "https://twitter.com/RemoraFinance",
+    "version": "1.0.0",
+    "aptos_network": "mainnet",
+    "merkle_trade_url": "https://app.merkle.trade"
+  },
+  
+  "styles": {
+    "website": "styles/website.css",
+    "ebook": "styles/ebook.css",
+    "pdf": "styles/pdf.css",
+    "mobi": "styles/mobi.css",
+    "epub": "styles/epub.css"
+  },
+  
+  "structure": {
+    "langs": "LANGS.md",
+    "readme": "README.md",
+    "glossary": "GLOSSARY.md",
+    "summary": "SUMMARY.md"
+  },
+  
+  "pdf": {
+    "pageNumbers": true,
+    "fontSize": 12,
+    "fontFamily": "Arial",
+    "paperSize": "a4",
+    "chapterMark": "pagebreak",
+    "pageBreaksBefore": "/",
+    "margin": {
+      "right": 62,
+      "left": 62,
+      "top": 56,
+      "bottom": 56
+    }
+  }
+}

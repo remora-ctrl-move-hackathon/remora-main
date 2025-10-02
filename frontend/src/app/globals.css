@@ -57,3 +57,33 @@
     @apply bg-background text-foreground;
   }
 }
+
+@layer utilities {
+  @keyframes shimmer {
+    0% {
+      background-position: 200% 0;
+    }
+    100% {
+      background-position: -200% 0;
+    }
+  }
+
+  .animate-shimmer {
+    animation: shimmer 2s linear infinite;
+  }
+
+  /* Smooth transitions for all interactive elements */
+  button, a, input, textarea, select {
+    @apply transition-all duration-200;
+  }
+
+  /* Glass morphism effect */
+  .glass {
+    @apply backdrop-blur-lg bg-white/10 border border-white/20;
+  }
+
+  /* Gradient text */
+  .gradient-text {
+    @apply bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent;
+  }
+}

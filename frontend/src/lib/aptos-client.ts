@@ -89,6 +89,13 @@ export class AptosClient {
           }
         }
         
+        // Handle exchange rate not set error gracefully
+        if (errorText.includes("E_RATE_NOT_SET")) {
+          // Rate not set is expected when exchange rates haven't been initialized
+          // Don't log this as an error, the service layer will handle with default rates
+          throw new Error("Exchange rate not initialized");
+        }
+        
         console.error("View function error response:", errorText);
         throw new Error(`Failed to call view function: ${response.status} ${errorText}`);
       }

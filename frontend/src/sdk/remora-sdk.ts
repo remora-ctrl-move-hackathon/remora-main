@@ -1,0 +1,189 @@
+import { AptosClient } from '@aptos-labs/ts-sdk'
+import { StreamingService } from '@/services/streaming.service'
+import { VaultService } from '@/services/vault.service'
+import { OffRampService } from '@/services/offramp.service'
+import { CONTRACTS } from '@/config/aptos'
+
+// Unified SDK for all Remora services
+export class RemoraSDK {
+  private client: AptosClient
+  public streaming: StreamingService
+  public vault: VaultService
+  public offramp: OffRampService
+
+  constructor(nodeUrl?: string) {
+    this.client = new AptosClient(nodeUrl || process.env.NEXT_PUBLIC_APTOS_NODE_URL!)
+    this.streaming = new StreamingService()
+    this.vault = new VaultService()
+    this.offramp = new OffRampService()
+  }
+
+  // High-level methods that combine multiple services
+  async getPortfolioValue(address: string): Promise<{
+    streaming: number
+    vaults: number
+    total: number
+  }> {
+    const [streamingBalance, vaultBalance] = await Promise.all([
+      this.getStreamingBalance(address),
+      this.getVaultBalance(address)
+    ])
+
+    return {
+      streaming: streamingBalance,
+      vaults: vaultBalance,
+      total: streamingBalance + vaultBalance
+    }
+  }
+
+  async getStreamingBalance(address: string): Promise<number> {
+    const [sentStreams, receivedStreams] = await Promise.all([
+      this.streaming.getUserSentStreams(address),
+      this.streaming.getUserReceivedStreams(address)
+    ])
+
+    const sentTotal = sentStreams.reduce((acc, stream) => 
+      acc - (stream.totalAmount - stream.withdrawnAmount), 0
+    )
+    const receivedTotal = receivedStreams.reduce((acc, stream) => 
+      acc + stream.withdrawableAmount, 0
+    )
+
+    return sentTotal + receivedTotal
+  }
+
+  async getVaultBalance(address: string): Promise<number> {
+    const userVaults = await this.vault.getUserVaults(address)
+    let totalBalance = 0
+
+    for (const vaultId of userVaults) {
+      const vault = await this.vault.getVault(vaultId)
+      const shares = await this.vault.getInvestorShares(vaultId, address)
+      
+      if (vault && vault.totalShares > 0) {
+        totalBalance += (shares / vault.totalShares) * vault.totalValue
+      }
+    }
+
+    return totalBalance
+  }
+
+  // Transaction builders with optimistic updates
+  async createStreamWithOptimisticUpdate(params: {
+    recipient: string
+    amount: number
+    durationSeconds: number
+    cancellable: boolean
+  }) {
+    // Return optimistic result immediately
+    const optimisticStream = {
+      streamId: Date.now(), // Temporary ID
+      sender: 'pending',
+      recipient: params.recipient,
+      startTime: Math.floor(Date.now() / 1000),
+      endTime: Math.floor(Date.now() / 1000) + params.durationSeconds,
+      totalAmount: params.amount,
+      withdrawnAmount: 0,
+      cancellable: params.cancellable,
+      cancelled: false,
+      isPending: true
+    }
+
+    // Trigger optimistic update event
+    window.dispatchEvent(new CustomEvent('stream_created_optimistic', { 
+      detail: optimisticStream 
+    }))
+
+    // Create actual transaction
+    const payload = await this.streaming.createStream({
+      recipient: params.recipient,
+      amountAptFloat: params.amount,
+      durationSeconds: params.durationSeconds,
+      cancellable: params.cancellable
+    })
+
+    return { optimisticStream, payload }
+  }
+
+  // Batch operations
+  async batchStreamCreation(streams: Array<{
+    recipient: string
+    amount: number
+    duration: number
+  }>) {
+    const payloads = await Promise.all(
+      streams.map(stream => 
+        this.streaming.createStream({
+          recipient: stream.recipient,
+          amountAptFloat: stream.amount,
+          durationSeconds: stream.duration,
+          cancellable: true
+        })
+      )
+    )
+
+    return payloads
+  }
+
+  // Analytics and insights
+  async getYieldAnalytics(address: string) {
+    const vaults = await this.vault.getUserVaults(address)
+    const analytics = []
+
+    for (const vaultId of vaults) {
+      const vault = await this.vault.getVault(vaultId)
+      const shares = await this.vault.getInvestorShares(vaultId, address)
+      
+      if (vault && shares > 0) {
+        const currentValue = (shares / vault.totalShares) * vault.totalValue
+        // Calculate APY based on vault performance
+        const apy = vault.performance?.allTime || 0
+        
+        analytics.push({
+          vaultId,
+          vaultName: vault.name,
+          invested: shares,
+          currentValue,
+          apy,
+          earnings: currentValue - shares
+        })
+      }
+    }
+
+    return analytics
+  }
+
+  // Cross-chain preparation (for future integration)
+  async prepareCrossChainTransfer(params: {
+    targetChain: 'ethereum' | 'solana' | 'arbitrum'
+    amount: number
+    token: string
+  }) {
+    // Placeholder for cross-chain integration
+    return {
+      sourceChain: 'aptos',
+      targetChain: params.targetChain,
+      amount: params.amount,
+      token: params.token,
+      estimatedFee: params.amount * 0.001, // 0.1% fee estimate
+      estimatedTime: 600 // 10 minutes
+    }
+  }
+}
+
+// Singleton instance
+let sdkInstance: RemoraSDK | null = null
+
+export function getRemoraSDK(): RemoraSDK {
+  if (!sdkInstance) {
+    sdkInstance = new RemoraSDK()
+  }
+  return sdkInstance
+}
+
+// React hook for using SDK
+import { useMemo } from 'react'
+
+export function useRemoraSDK() {
+  return useMemo(() => getRemoraSDK(), [])
+}
