@@ -10,7 +10,24 @@ export function useVault() {
   const [loading, setLoading] = useState(false);
   const [userVaults, setUserVaults] = useState<Vault[]>([]);
   const [managedVaults, setManagedVaults] = useState<Vault[]>([]);
+  const [allVaults, setAllVaults] = useState<Vault[]>([]);
   const [totalValueLocked, setTotalValueLocked] = useState<number>(0);
+
+  // Fetch all vaults globally
+  const fetchAllVaults = useCallback(async () => {
+    try {
+      setLoading(true);
+      const vaults = await vaultService.getAllVaults(100);
+      setAllVaults(vaults);
+
+      const tvl = await vaultService.getTotalValueLocked();
+      setTotalValueLocked(tvl);
+    } catch (error) {
+      console.error("Error fetching all vaults:", error);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   // Fetch user's vaults
   const fetchUserVaults = useCallback(async () => {
@@ -272,10 +289,16 @@ export function useVault() {
     fetchUserVaults();
   }, [fetchUserVaults]);
 
+  // Fetch all vaults on mount
+  useEffect(() => {
+    fetchAllVaults();
+  }, [fetchAllVaults]);
+
   return {
     loading,
     userVaults,
     managedVaults,
+    allVaults,
     totalValueLocked,
     createVault,
     depositToVault,
@@ -287,6 +310,7 @@ export function useVault() {
     getInvestorShares,
     getVaultPerformance,
     fetchUserVaults,
+    fetchAllVaults,
     vaultService,
   };
 }
