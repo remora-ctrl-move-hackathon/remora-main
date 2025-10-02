@@ -28,7 +28,7 @@ module remora::vault {
     const MAX_MANAGEMENT_FEE: u64 = 500;   // 5%
     const FEE_DENOMINATOR: u64 = 10000;    // For basis points
     const MIN_DEPOSIT: u64 = 100;          // Minimum deposit amount
-    const WITHDRAWAL_COOLDOWN: u64 = 86400; // 24 hours in seconds
+    const WITHDRAWAL_COOLDOWN: u64 = 60; // 1 minute in seconds
 
     /// Vault status
     const STATUS_ACTIVE: u8 = 1;
