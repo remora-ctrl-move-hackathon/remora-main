@@ -3,6 +3,7 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { WalletButton } from "@/components/ui/wallet-button"
+import { CommandBar } from "@/components/ui/command-bar"
 
 export function Header() {
   const pathname = usePathname()
@@ -18,7 +19,9 @@ export function Header() {
       <div className="max-w-screen-xl mx-auto px-8">
         <div className="flex items-center justify-between py-4">
           <div className="flex items-center gap-8">
-            <h1 className="text-2xl font-bold tracking-wide text-foreground">Remora</h1>
+            <Link href="/landing">
+              <h1 className="text-2xl font-bold tracking-wide text-foreground hover:text-primary transition-colors cursor-pointer">Remora</h1>
+            </Link>
             <nav className="hidden md:flex items-center gap-6">
               <Link 
                 href="/"
@@ -44,9 +47,24 @@ export function Header() {
               >
                 Analytics
               </Link>
+              <Link 
+                href="/trading/advanced"
+                className={`text-sm font-light ${isActive("/trading/advanced") ? "text-primary font-normal" : "text-muted-foreground hover:text-foreground"} transition-all duration-200`}
+              >
+                Advanced
+              </Link>
+              <Link 
+                href="/api/dashboard"
+                className={`text-sm font-light ${isActive("/api/dashboard") ? "text-primary font-normal" : "text-muted-foreground hover:text-foreground"} transition-all duration-200`}
+              >
+                API
+              </Link>
             </nav>
           </div>
-          <WalletButton />
+          <div className="flex items-center gap-3">
+            <CommandBar />
+            <WalletButton />
+          </div>
         </div>
       </div>
     </header>
