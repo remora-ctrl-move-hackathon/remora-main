@@ -1,7 +1,8 @@
 import { aptosClient } from "@/lib/aptos-client";
-import { 
-  CONTRACTS, 
+import {
+  CONTRACTS,
   MODULE_ADDRESS,
+  VAULT_STORE_ADDRESS,
   formatAptAmount,
   parseAptAmount,
   VAULT_STATUS
@@ -50,7 +51,8 @@ export interface ExecuteTradeParams {
 }
 
 export class VaultService {
-  private moduleOwner: string = MODULE_ADDRESS;
+  // VaultStore is located at the address that called initialize(), not the module address
+  private moduleOwner: string = VAULT_STORE_ADDRESS;
 
   /**
    * Initialize the vault module (admin only)
