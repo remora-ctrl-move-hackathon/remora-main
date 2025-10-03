@@ -1,4 +1,4 @@
-import { AptosClient } from '@aptos-labs/ts-sdk'
+import { Aptos, AptosConfig, Network } from '@aptos-labs/ts-sdk'
 import { StreamingService } from '@/services/streaming.service'
 import { VaultService } from '@/services/vault.service'
 import { OffRampService } from '@/services/offramp.service'
@@ -6,13 +6,14 @@ import { CONTRACTS } from '@/config/aptos'
 
 // Unified SDK for all Remora services
 export class RemoraSDK {
-  private client: AptosClient
+  private client: Aptos
   public streaming: StreamingService
   public vault: VaultService
   public offramp: OffRampService
 
-  constructor(nodeUrl?: string) {
-    this.client = new AptosClient(nodeUrl || process.env.NEXT_PUBLIC_APTOS_NODE_URL!)
+  constructor(network: Network = Network.TESTNET) {
+    const config = new AptosConfig({ network })
+    this.client = new Aptos(config)
     this.streaming = new StreamingService()
     this.vault = new VaultService()
     this.offramp = new OffRampService()
@@ -37,17 +38,31 @@ export class RemoraSDK {
   }
 
   async getStreamingBalance(address: string): Promise<number> {
-    const [sentStreams, receivedStreams] = await Promise.all([
+    const [sentStreamIds, receivedStreamIds] = await Promise.all([
       this.streaming.getUserSentStreams(address),
       this.streaming.getUserReceivedStreams(address)
     ])
 
-    const sentTotal = sentStreams.reduce((acc, stream) => 
-      acc - (stream.totalAmount - stream.withdrawnAmount), 0
+    // Fetch stream details for sent streams
+    const sentStreams = await Promise.all(
+      sentStreamIds.map(id => this.streaming.getStreamInfo(id))
     )
-    const receivedTotal = receivedStreams.reduce((acc, stream) => 
-      acc + stream.withdrawableAmount, 0
+    const sentTotal = sentStreams
+      .filter(stream => stream !== null)
+      .reduce((acc, stream) =>
+        acc - (stream!.totalAmount - stream!.withdrawnAmount), 0
+      )
+
+    // Fetch stream details for received streams
+    const receivedStreams = await Promise.all(
+      receivedStreamIds.map(id => this.streaming.getStreamInfo(id))
     )
+    const receivedTotal = receivedStreams
+      .filter(stream => stream !== null)
+      .reduce((acc, stream) => {
+        const withdrawable = this.streaming.getWithdrawableAmount(stream!.streamId)
+        return acc + (typeof withdrawable === 'number' ? withdrawable : 0)
+      }, 0)
 
     return sentTotal + receivedTotal
   }
@@ -57,9 +72,9 @@ export class RemoraSDK {
     let totalBalance = 0
 
     for (const vaultId of userVaults) {
-      const vault = await this.vault.getVault(vaultId)
+      const vault = await this.vault.getVaultInfo(vaultId)
       const shares = await this.vault.getInvestorShares(vaultId, address)
-      
+
       if (vault && vault.totalShares > 0) {
         totalBalance += (shares / vault.totalShares) * vault.totalValue
       }
@@ -96,10 +111,10 @@ export class RemoraSDK {
 
     // Create actual transaction
     const payload = await this.streaming.createStream({
-      recipient: params.recipient,
-      amountAptFloat: params.amount,
+      receiver: params.recipient,
+      totalAmount: params.amount,
       durationSeconds: params.durationSeconds,
-      cancellable: params.cancellable
+      streamName: 'Stream'
     })
 
     return { optimisticStream, payload }
@@ -112,12 +127,12 @@ export class RemoraSDK {
     duration: number
   }>) {
     const payloads = await Promise.all(
-      streams.map(stream => 
+      streams.map(stream =>
         this.streaming.createStream({
-          recipient: stream.recipient,
-          amountAptFloat: stream.amount,
+          receiver: stream.recipient,
+          totalAmount: stream.amount,
           durationSeconds: stream.duration,
-          cancellable: true
+          streamName: 'Batch Stream'
         })
       )
     )
@@ -131,14 +146,15 @@ export class RemoraSDK {
     const analytics = []
 
     for (const vaultId of vaults) {
-      const vault = await this.vault.getVault(vaultId)
+      const vault = await this.vault.getVaultInfo(vaultId)
       const shares = await this.vault.getInvestorShares(vaultId, address)
-      
+
       if (vault && shares > 0) {
         const currentValue = (shares / vault.totalShares) * vault.totalValue
         // Calculate APY based on vault performance
-        const apy = vault.performance?.allTime || 0
-        
+        const performance = await this.vault.getVaultPerformance(vaultId)
+        const apy = this.vault.calculateAPY(vault, performance)
+
         analytics.push({
           vaultId,
           vaultName: vault.name,
