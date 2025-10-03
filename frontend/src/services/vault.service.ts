@@ -25,6 +25,7 @@ export interface Vault {
   minInvestment: number;
   maxInvestors: number;
   currentInvestors: number;
+  leadTrader: string; // Address to copy trades from
 }
 
 export interface CreateVaultParams {
@@ -35,6 +36,7 @@ export interface CreateVaultParams {
   managementFee: number; // in percentage (e.g., 2 for 2%)
   minInvestment: number; // in APT
   maxInvestors: number;
+  leadTrader: string; // Address to copy trades from
 }
 
 export interface ExecuteTradeParams {
@@ -74,6 +76,7 @@ export class VaultService {
         Math.floor(params.managementFee * 100).toString(), // Convert to basis points
         formatAptAmount(params.minInvestment).toString(),
         params.maxInvestors.toString(),
+        params.leadTrader, // Lead trader address
         this.moduleOwner,
       ],
     });
@@ -196,6 +199,7 @@ export class VaultService {
         minInvestment: parseAptAmount(result.min_investment),
         maxInvestors: Number(result.max_investors),
         currentInvestors: Number(result.current_investors),
+        leadTrader: result.lead_trader,
       };
     } catch (error: any) {
       // Silently ignore "vault not found" errors
