@@ -12,13 +12,16 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
 import {
-  Plus, TrendingUp, Users, DollarSign, Shield,
+  Plus, TrendingUp, TrendingDown, Users, DollarSign, Shield,
   ArrowUpRight, ArrowDownRight, Loader2, PieChart,
-  BarChart3, Activity, Wallet, Trophy, UserPlus
+  BarChart3, Activity, Wallet, Trophy, UserPlus, Zap
 } from "lucide-react"
 import { useWallet } from "@aptos-labs/wallet-adapter-react"
 import { useVault } from "@/hooks/useVault"
+import { useVaultMerkleTrading } from "@/hooks/useVaultMerkleTrading"
 import { VAULT_STATUS } from "@/config/aptos"
+import { MERKLE_CONFIG, TradingPair, getTradingPairDisplayName } from "@/config/merkle"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import toast from "react-hot-toast"
 import Link from "next/link"
 import { AnimatedNumber } from "@/components/ui/live-indicator"
@@ -38,9 +41,17 @@ export default function Vault() {
     fetchUserVaults
   } = useVault()
 
+  const {
+    loading: tradingLoading,
+    executeVaultTrade,
+    getVaultPositions,
+    calculateVaultPnL
+  } = useVaultMerkleTrading()
+
   const [openCreate, setOpenCreate] = useState(false)
   const [openDeposit, setOpenDeposit] = useState(false)
   const [openWithdraw, setOpenWithdraw] = useState(false)
+  const [openTrade, setOpenTrade] = useState(false)
   const [selectedVault, setSelectedVault] = useState<any>(null)
   const [userShares, setUserShares] = useState<number>(0)
   const [activeTab, setActiveTab] = useState<"all" | "invested" | "managed" | "leaderboard">("all")
@@ -58,6 +69,13 @@ export default function Vault() {
   const [withdrawAmount, setWithdrawAmount] = useState("0")
   const [cooldownEndTime, setCooldownEndTime] = useState<number | null>(null)
   const [cooldownSeconds, setCooldownSeconds] = useState<number>(0)
+
+  const [tradeForm, setTradeForm] = useState({
+    pair: 'BTC_USD' as TradingPair,
+    size: "300",
+    collateral: "100",
+    isLong: true,
+  })
 
   // Cooldown timer effect
   useEffect(() => {
@@ -165,6 +183,35 @@ export default function Vault() {
       toast.success("Withdrawal successful!")
     } catch (error: any) {
       toast.error(error.message || "Failed to withdraw")
+    }
+  }
+
+  const handleExecuteTrade = async () => {
+    if (!selectedVault || !connected) {
+      toast.error("Please connect your wallet")
+      return
+    }
+
+    try {
+      await executeVaultTrade(selectedVault.vaultId, {
+        pair: tradeForm.pair,
+        size: parseFloat(tradeForm.size),
+        collateral: parseFloat(tradeForm.collateral),
+        isLong: tradeForm.isLong,
+        isIncrease: true,
+      })
+
+      setOpenTrade(false)
+      setTradeForm({
+        pair: 'BTC_USD',
+        size: "300",
+        collateral: "100",
+        isLong: true,
+      })
+
+      toast.success("Trade executed successfully!")
+    } catch (error: any) {
+      toast.error(error.message || "Failed to execute trade")
     }
   }
 
@@ -649,6 +696,25 @@ export default function Vault() {
                           <span>{vault.minInvestment || 0} APT</span>
                         </div>
                       </div>
+
+                      <div className="flex gap-2 pt-2">
+                        <Button
+                          className="flex-1 bg-primary hover:bg-primary/90"
+                          onClick={() => {
+                            setSelectedVault(vault)
+                            setOpenTrade(true)
+                          }}
+                        >
+                          <Zap className="h-4 w-4 mr-2" />
+                          Execute Trade
+                        </Button>
+                        <Link href="/vault/trading" className="flex-1">
+                          <Button variant="outline" className="w-full">
+                            <BarChart3 className="h-4 w-4 mr-2" />
+                            View Positions
+                          </Button>
+                        </Link>
+                      </div>
                     </CardContent>
                   </Card>
                 ))}
@@ -858,6 +924,104 @@ export default function Vault() {
                 disabled={!withdrawAmount || parseFloat(withdrawAmount) <= 0 || parseFloat(withdrawAmount) > userShares || cooldownSeconds > 0}
               >
                 Withdraw
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Execute Trade Dialog */}
+        <Dialog open={openTrade} onOpenChange={setOpenTrade}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>Execute Trade for {selectedVault?.name}</DialogTitle>
+              <DialogDescription>
+                Place a trade using vault funds. This will execute on Merkle Trade.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label>Trading Pair</Label>
+                <Select
+                  value={tradeForm.pair}
+                  onValueChange={(value) => setTradeForm({...tradeForm, pair: value as TradingPair})}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Object.values(MERKLE_CONFIG.TRADING_PAIRS).map(pair => (
+                      <SelectItem key={pair} value={pair}>
+                        {getTradingPairDisplayName(pair)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Position Size (USDC)</Label>
+                  <Input
+                    type="number"
+                    value={tradeForm.size}
+                    onChange={(e) => setTradeForm({...tradeForm, size: e.target.value})}
+                    placeholder="300"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Collateral (USDC)</Label>
+                  <Input
+                    type="number"
+                    value={tradeForm.collateral}
+                    onChange={(e) => setTradeForm({...tradeForm, collateral: e.target.value})}
+                    placeholder="100"
+                  />
+                </div>
+              </div>
+
+              <div className="p-3 bg-gray-50 rounded-lg">
+                <div className="flex justify-between text-sm mb-2">
+                  <span>Leverage:</span>
+                  <span className="font-semibold">
+                    {(parseFloat(tradeForm.size) / parseFloat(tradeForm.collateral) || 0).toFixed(2)}x
+                  </span>
+                </div>
+                <div className="flex justify-between text-sm text-muted-foreground">
+                  <span>Vault TVL:</span>
+                  <span>{(selectedVault?.totalValue || 0).toFixed(2)} APT</span>
+                </div>
+              </div>
+
+              <div className="flex gap-2">
+                <Button
+                  variant={tradeForm.isLong ? "default" : "outline"}
+                  onClick={() => setTradeForm({...tradeForm, isLong: true})}
+                  className="flex-1"
+                >
+                  <TrendingUp className="h-4 w-4 mr-1" />
+                  Long
+                </Button>
+                <Button
+                  variant={!tradeForm.isLong ? "default" : "outline"}
+                  onClick={() => setTradeForm({...tradeForm, isLong: false})}
+                  className="flex-1"
+                >
+                  <TrendingDown className="h-4 w-4 mr-1" />
+                  Short
+                </Button>
+              </div>
+            </div>
+            <div className="flex justify-end gap-3">
+              <Button variant="outline" onClick={() => setOpenTrade(false)}>
+                Cancel
+              </Button>
+              <Button
+                onClick={handleExecuteTrade}
+                disabled={loading || tradingLoading}
+                className="bg-primary hover:bg-primary/90"
+              >
+                {(loading || tradingLoading) ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Zap className="h-4 w-4 mr-2" />}
+                Execute Trade
               </Button>
             </div>
           </DialogContent>

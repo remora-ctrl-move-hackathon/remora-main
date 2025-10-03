@@ -21,6 +21,7 @@ import { MERKLE_CONFIG, TradingPair, getTradingPairDisplayName } from "@/config/
 import { OrderParams, LimitOrderParams, Position } from "@/services/perpetual-trading.service"
 import toast from "react-hot-toast"
 import Link from "next/link"
+import { TradingViewChart } from "@/components/trading/TradingViewChart"
 
 export default function TradingVault() {
   const { connected, account } = useWallet()
@@ -42,7 +43,8 @@ export default function TradingVault() {
   const [openLimitOrder, setOpenLimitOrder] = useState(false)
   const [selectedPosition, setSelectedPosition] = useState<Position | null>(null)
   const [activeTab, setActiveTab] = useState<"positions" | "orders" | "history">("positions")
-  
+  const [selectedChartPair, setSelectedChartPair] = useState<TradingPair>('BTC_USD')
+
   const [tradeForm, setTradeForm] = useState({
     pair: 'BTC_USD' as TradingPair,
     size: "1000",
@@ -406,6 +408,35 @@ export default function TradingVault() {
             </CardContent>
           </Card>
         </div>
+
+        {/* Price Chart */}
+        <Card className="bg-white border-border/50 mb-8">
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-lg font-light">Price Chart</CardTitle>
+              <Select value={selectedChartPair} onValueChange={(value) => setSelectedChartPair(value as TradingPair)}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {Object.values(MERKLE_CONFIG.TRADING_PAIRS).map(pair => (
+                    <SelectItem key={pair} value={pair}>
+                      {getTradingPairDisplayName(pair)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <TradingViewChart
+              symbol={selectedChartPair.replace('_', '')}
+              interval="60"
+              theme="light"
+              height={500}
+            />
+          </CardContent>
+        </Card>
 
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)}>
