@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Header } from "@/components/ui/header"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -11,26 +11,28 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
-import { Switch } from "@/components/ui/switch"
-import { 
-  Plus, TrendingUp, Users, DollarSign, Shield,
+import {
+  Plus, TrendingUp, TrendingDown, Users, DollarSign, Shield,
   ArrowUpRight, ArrowDownRight, Loader2, PieChart,
-  BarChart3, Activity, Wallet, Trophy, UserPlus, Minus
+  BarChart3, Activity, Wallet, Trophy, UserPlus, Zap
 } from "lucide-react"
 import { useWallet } from "@aptos-labs/wallet-adapter-react"
 import { useVault } from "@/hooks/useVault"
+import { useVaultMerkleTrading } from "@/hooks/useVaultMerkleTrading"
 import { VAULT_STATUS } from "@/config/aptos"
+import { MERKLE_CONFIG, TradingPair, getTradingPairDisplayName } from "@/config/merkle"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import toast from "react-hot-toast"
 import Link from "next/link"
 import { AnimatedNumber } from "@/components/ui/live-indicator"
 
 export default function Vault() {
   const { connected } = useWallet()
-  const { 
+  const {
     loading,
     userVaults,
     managedVaults,
+    allVaults,
     totalValueLocked,
     createVault,
     depositToVault,
@@ -39,9 +41,17 @@ export default function Vault() {
     fetchUserVaults
   } = useVault()
 
+  const {
+    loading: tradingLoading,
+    executeVaultTrade,
+    getVaultPositions,
+    calculateVaultPnL
+  } = useVaultMerkleTrading()
+
   const [openCreate, setOpenCreate] = useState(false)
   const [openDeposit, setOpenDeposit] = useState(false)
   const [openWithdraw, setOpenWithdraw] = useState(false)
+  const [openTrade, setOpenTrade] = useState(false)
   const [selectedVault, setSelectedVault] = useState<any>(null)
   const [userShares, setUserShares] = useState<number>(0)
   const [activeTab, setActiveTab] = useState<"all" | "invested" | "managed" | "leaderboard">("all")
@@ -52,13 +62,37 @@ export default function Vault() {
     managementFee: "2",
     performanceFee: "20",
     minDeposit: "100",
-    isMultiSig: false,
-    signers: [""],
-    threshold: "1"
+    leadTrader: ""
   })
 
   const [depositAmount, setDepositAmount] = useState("100")
   const [withdrawAmount, setWithdrawAmount] = useState("0")
+  const [cooldownEndTime, setCooldownEndTime] = useState<number | null>(null)
+  const [cooldownSeconds, setCooldownSeconds] = useState<number>(0)
+
+  const [tradeForm, setTradeForm] = useState({
+    pair: 'BTC_USD' as TradingPair,
+    size: "300",
+    collateral: "100",
+    isLong: true,
+  })
+
+  // Cooldown timer effect
+  useEffect(() => {
+    if (!cooldownEndTime) return
+
+    const interval = setInterval(() => {
+      const remaining = Math.max(0, Math.ceil((cooldownEndTime - Date.now()) / 1000))
+      setCooldownSeconds(remaining)
+
+      if (remaining === 0) {
+        setCooldownEndTime(null)
+        clearInterval(interval)
+      }
+    }, 1000)
+
+    return () => clearInterval(interval)
+  }, [cooldownEndTime])
 
   const handleCreateVault = async () => {
     if (!connected) {
@@ -74,7 +108,8 @@ export default function Vault() {
         managementFee: parseFloat(vaultForm.managementFee) / 100,
         performanceFee: parseFloat(vaultForm.performanceFee) / 100,
         minInvestment: parseFloat(vaultForm.minDeposit),
-        maxInvestors: 100
+        maxInvestors: 100,
+        leadTrader: vaultForm.leadTrader
       })
 
       setOpenCreate(false)
@@ -83,7 +118,8 @@ export default function Vault() {
         description: "",
         managementFee: "2",
         performanceFee: "20",
-        minDeposit: "100"
+        minDeposit: "100",
+        leadTrader: ""
       })
       
       toast.success("Vault created successfully!")
@@ -95,11 +131,24 @@ export default function Vault() {
   const handleDeposit = async () => {
     if (!selectedVault || !depositAmount) return
 
+    const amount = parseFloat(depositAmount)
+    const minInvestment = selectedVault.minInvestment || 0
+
+    if (amount < minInvestment) {
+      toast.error(`Minimum deposit is ${minInvestment} APT`)
+      return
+    }
+
     try {
-      await depositToVault(selectedVault.vaultId, parseFloat(depositAmount))
+      await depositToVault(selectedVault.vaultId, amount)
+
+      // Start 1-minute cooldown timer
+      const endTime = Date.now() + 60000 // 60 seconds
+      setCooldownEndTime(endTime)
+
       setOpenDeposit(false)
       setDepositAmount("100")
-      toast.success(`Deposited ${depositAmount} APT successfully!`)
+      toast.success(`Deposited ${depositAmount} APT successfully! You can withdraw after 1 minute.`)
     } catch (error: any) {
       toast.error(error.message || "Failed to deposit")
     }
@@ -137,6 +186,35 @@ export default function Vault() {
     }
   }
 
+  const handleExecuteTrade = async () => {
+    if (!selectedVault || !connected) {
+      toast.error("Please connect your wallet")
+      return
+    }
+
+    try {
+      await executeVaultTrade(selectedVault.vaultId, {
+        pair: tradeForm.pair,
+        size: parseFloat(tradeForm.size),
+        collateral: parseFloat(tradeForm.collateral),
+        isLong: tradeForm.isLong,
+        isIncrease: true,
+      })
+
+      setOpenTrade(false)
+      setTradeForm({
+        pair: 'BTC_USD',
+        size: "300",
+        collateral: "100",
+        isLong: true,
+      })
+
+      toast.success("Trade executed successfully!")
+    } catch (error: any) {
+      toast.error(error.message || "Failed to execute trade")
+    }
+  }
+
   const getStatusBadge = (status: number) => {
     switch(status) {
       case VAULT_STATUS.ACTIVE:
@@ -150,21 +228,14 @@ export default function Vault() {
     }
   }
 
-  // Remove duplicates by vaultId when combining arrays
-  const allVaults = [...userVaults, ...managedVaults.filter(mv => 
-    !userVaults.some(uv => uv.vaultId === mv.vaultId)
-  )]
-  const displayVaults = activeTab === "all" ? allVaults : 
-                       activeTab === "invested" ? userVaults : managedVaults
+  // Display vaults based on active tab
+  const displayVaults = activeTab === "all" ? allVaults :
+                       activeTab === "invested" ? userVaults :
+                       activeTab === "managed" ? managedVaults : []
 
   // Calculate total stats
   const totalInvested = userVaults.reduce((acc, v) => acc + (v.totalValue || 0), 0)
-  const totalReturns = userVaults.reduce((acc, v) => {
-    // Since we don't have performance data, calculate based on totalValue for now
-    const returns = (v.totalValue || 0) * 0.05 // Assume 5% for demo
-    return acc + returns
-  }, 0)
-  const avgAPY = userVaults.length > 0 
+  const avgAPY = userVaults.length > 0
     ? 8.5 // Static demo value since performance not in interface
     : 0
 
@@ -214,12 +285,24 @@ export default function Vault() {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="description">Description</Label>
-                  <Textarea 
-                    id="description" 
-                    placeholder="Describe your investment strategy..." 
+                  <Textarea
+                    id="description"
+                    placeholder="Describe your investment strategy..."
                     value={vaultForm.description}
                     onChange={(e) => setVaultForm({...vaultForm, description: e.target.value})}
                   />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="leadTrader">Lead Trader Address (Copy-Trading)</Label>
+                  <Input
+                    id="leadTrader"
+                    placeholder="0x... (leave empty for manual trading)"
+                    value={vaultForm.leadTrader}
+                    onChange={(e) => setVaultForm({...vaultForm, leadTrader: e.target.value})}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Enter the wallet address to automatically copy trades from. Leave empty for manual vault management.
+                  </p>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
@@ -253,81 +336,6 @@ export default function Vault() {
                     onChange={(e) => setVaultForm({...vaultForm, minDeposit: e.target.value})}
                   />
                 </div>
-                
-                <Collapsible>
-                  <CollapsibleTrigger className="flex items-center gap-2 text-sm hover:text-primary transition-colors">
-                    <Shield className="h-4 w-4" />
-                    Advanced Security Options
-                  </CollapsibleTrigger>
-                  <CollapsibleContent className="space-y-4 pt-4">
-                    <div className="flex items-center justify-between">
-                      <Label htmlFor="multisig" className="text-sm">Enable Multi-Signature</Label>
-                      <Switch
-                        id="multisig"
-                        checked={vaultForm.isMultiSig}
-                        onCheckedChange={(checked) => setVaultForm({...vaultForm, isMultiSig: checked})}
-                      />
-                    </div>
-                    
-                    {vaultForm.isMultiSig && (
-                      <>
-                        <div className="space-y-2">
-                          <Label className="text-sm">Signers (Wallet Addresses)</Label>
-                          {vaultForm.signers.map((signer, index) => (
-                            <div key={index} className="flex gap-2">
-                              <Input
-                                value={signer}
-                                onChange={(e) => {
-                                  const newSigners = [...vaultForm.signers]
-                                  newSigners[index] = e.target.value
-                                  setVaultForm({...vaultForm, signers: newSigners})
-                                }}
-                                placeholder="0x..."
-                              />
-                              {index === vaultForm.signers.length - 1 ? (
-                                <Button
-                                  type="button"
-                                  variant="outline"
-                                  size="icon"
-                                  onClick={() => setVaultForm({...vaultForm, signers: [...vaultForm.signers, ""]})}
-                                >
-                                  <Plus className="h-4 w-4" />
-                                </Button>
-                              ) : (
-                                <Button
-                                  type="button"
-                                  variant="outline"
-                                  size="icon"
-                                  onClick={() => {
-                                    const newSigners = vaultForm.signers.filter((_, i) => i !== index)
-                                    setVaultForm({...vaultForm, signers: newSigners})
-                                  }}
-                                >
-                                  <Minus className="h-4 w-4" />
-                                </Button>
-                              )}
-                            </div>
-                          ))}
-                        </div>
-                        
-                        <div className="space-y-2">
-                          <Label htmlFor="threshold" className="text-sm">Required Signatures</Label>
-                          <Input
-                            id="threshold"
-                            type="number"
-                            min="1"
-                            max={vaultForm.signers.length}
-                            value={vaultForm.threshold}
-                            onChange={(e) => setVaultForm({...vaultForm, threshold: e.target.value})}
-                          />
-                          <p className="text-xs text-muted-foreground">
-                            {vaultForm.threshold} out of {vaultForm.signers.filter(s => s).length} signatures required
-                          </p>
-                        </div>
-                      </>
-                    )}
-                  </CollapsibleContent>
-                </Collapsible>
               </div>
               <div className="flex justify-end gap-3">
                 <Button variant="outline" onClick={() => setOpenCreate(false)}>
@@ -437,14 +445,15 @@ export default function Vault() {
                           <CardDescription className="text-xs">
                             Manager: {vault.manager.slice(0, 8)}...{vault.manager.slice(-6)}
                           </CardDescription>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          {vault.isMultiSig && (
-                            <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                              <Shield className="h-3 w-3" />
-                              Multi-sig
+                          {vault.leadTrader && vault.leadTrader !== "0x0" && (
+                            <div className="mt-1 flex items-center gap-1">
+                              <Badge variant="secondary" className="text-xs">
+                                Copy-Trading: {vault.leadTrader.slice(0, 6)}...{vault.leadTrader.slice(-4)}
+                              </Badge>
                             </div>
                           )}
+                        </div>
+                        <div className="flex items-center gap-2">
                           {getStatusBadge(vault.status)}
                         </div>
                       </div>
@@ -538,14 +547,15 @@ export default function Vault() {
                           <CardDescription className="text-xs">
                             Manager: {vault.manager.slice(0, 8)}...{vault.manager.slice(-6)}
                           </CardDescription>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          {vault.isMultiSig && (
-                            <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                              <Shield className="h-3 w-3" />
-                              Multi-sig
+                          {vault.leadTrader && vault.leadTrader !== "0x0" && (
+                            <div className="mt-1 flex items-center gap-1">
+                              <Badge variant="secondary" className="text-xs">
+                                Copy-Trading: {vault.leadTrader.slice(0, 6)}...{vault.leadTrader.slice(-4)}
+                              </Badge>
                             </div>
                           )}
+                        </div>
+                        <div className="flex items-center gap-2">
                           {getStatusBadge(vault.status)}
                         </div>
                       </div>
@@ -641,14 +651,15 @@ export default function Vault() {
                           <CardDescription className="text-xs">
                             Manager: {vault.manager.slice(0, 8)}...{vault.manager.slice(-6)}
                           </CardDescription>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          {vault.isMultiSig && (
-                            <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                              <Shield className="h-3 w-3" />
-                              Multi-sig
+                          {vault.leadTrader && vault.leadTrader !== "0x0" && (
+                            <div className="mt-1 flex items-center gap-1">
+                              <Badge variant="secondary" className="text-xs">
+                                Copy-Trading: {vault.leadTrader.slice(0, 6)}...{vault.leadTrader.slice(-4)}
+                              </Badge>
                             </div>
                           )}
+                        </div>
+                        <div className="flex items-center gap-2">
                           {getStatusBadge(vault.status)}
                         </div>
                       </div>
@@ -684,6 +695,25 @@ export default function Vault() {
                           <span className="text-muted-foreground">Min Investment</span>
                           <span>{vault.minInvestment || 0} APT</span>
                         </div>
+                      </div>
+
+                      <div className="flex gap-2 pt-2">
+                        <Button
+                          className="flex-1 bg-primary hover:bg-primary/90"
+                          onClick={() => {
+                            setSelectedVault(vault)
+                            setOpenTrade(true)
+                          }}
+                        >
+                          <Zap className="h-4 w-4 mr-2" />
+                          Execute Trade
+                        </Button>
+                        <Link href="/vault/trading" className="flex-1">
+                          <Button variant="outline" className="w-full">
+                            <BarChart3 className="h-4 w-4 mr-2" />
+                            View Positions
+                          </Button>
+                        </Link>
                       </div>
                     </CardContent>
                   </Card>
@@ -799,21 +829,34 @@ export default function Vault() {
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4 py-4">
+              {/* Cooldown Warning */}
+              {cooldownSeconds > 0 && (
+                <div className="p-3 bg-yellow-500/10 border border-yellow-500/50 rounded-lg">
+                  <p className="text-sm text-yellow-600 dark:text-yellow-400 font-medium">
+                    ⏱️ Withdrawal Cooldown Active
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    You can withdraw in {cooldownSeconds} second{cooldownSeconds !== 1 ? 's' : ''}
+                  </p>
+                </div>
+              )}
+
               <div className="space-y-2">
                 <Label htmlFor="withdrawAmount">Shares to Withdraw</Label>
-                <Input 
-                  id="withdrawAmount" 
-                  type="number" 
-                  placeholder="0" 
+                <Input
+                  id="withdrawAmount"
+                  type="number"
+                  placeholder="0"
                   value={withdrawAmount}
                   onChange={(e) => setWithdrawAmount(e.target.value)}
                   max={userShares}
+                  disabled={cooldownSeconds > 0}
                 />
                 <p className="text-xs text-muted-foreground">
                   Your shares: {userShares.toFixed(6)}
                 </p>
               </div>
-              
+
               {selectedVault && userShares > 0 && (
                 <div className="p-3 bg-muted rounded-lg space-y-2 text-sm">
                   <div className="flex justify-between">
@@ -876,11 +919,109 @@ export default function Vault() {
               <Button variant="outline" onClick={() => setOpenWithdraw(false)}>
                 Cancel
               </Button>
-              <Button 
-                onClick={handleWithdraw} 
-                disabled={!withdrawAmount || parseFloat(withdrawAmount) <= 0 || parseFloat(withdrawAmount) > userShares}
+              <Button
+                onClick={handleWithdraw}
+                disabled={!withdrawAmount || parseFloat(withdrawAmount) <= 0 || parseFloat(withdrawAmount) > userShares || cooldownSeconds > 0}
               >
                 Withdraw
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Execute Trade Dialog */}
+        <Dialog open={openTrade} onOpenChange={setOpenTrade}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>Execute Trade for {selectedVault?.name}</DialogTitle>
+              <DialogDescription>
+                Place a trade using vault funds. This will execute on Merkle Trade.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label>Trading Pair</Label>
+                <Select
+                  value={tradeForm.pair}
+                  onValueChange={(value) => setTradeForm({...tradeForm, pair: value as TradingPair})}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Object.values(MERKLE_CONFIG.TRADING_PAIRS).map(pair => (
+                      <SelectItem key={pair} value={pair}>
+                        {getTradingPairDisplayName(pair)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Position Size (USDC)</Label>
+                  <Input
+                    type="number"
+                    value={tradeForm.size}
+                    onChange={(e) => setTradeForm({...tradeForm, size: e.target.value})}
+                    placeholder="300"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Collateral (USDC)</Label>
+                  <Input
+                    type="number"
+                    value={tradeForm.collateral}
+                    onChange={(e) => setTradeForm({...tradeForm, collateral: e.target.value})}
+                    placeholder="100"
+                  />
+                </div>
+              </div>
+
+              <div className="p-3 bg-gray-50 rounded-lg">
+                <div className="flex justify-between text-sm mb-2">
+                  <span>Leverage:</span>
+                  <span className="font-semibold">
+                    {(parseFloat(tradeForm.size) / parseFloat(tradeForm.collateral) || 0).toFixed(2)}x
+                  </span>
+                </div>
+                <div className="flex justify-between text-sm text-muted-foreground">
+                  <span>Vault TVL:</span>
+                  <span>{(selectedVault?.totalValue || 0).toFixed(2)} APT</span>
+                </div>
+              </div>
+
+              <div className="flex gap-2">
+                <Button
+                  variant={tradeForm.isLong ? "default" : "outline"}
+                  onClick={() => setTradeForm({...tradeForm, isLong: true})}
+                  className="flex-1"
+                >
+                  <TrendingUp className="h-4 w-4 mr-1" />
+                  Long
+                </Button>
+                <Button
+                  variant={!tradeForm.isLong ? "default" : "outline"}
+                  onClick={() => setTradeForm({...tradeForm, isLong: false})}
+                  className="flex-1"
+                >
+                  <TrendingDown className="h-4 w-4 mr-1" />
+                  Short
+                </Button>
+              </div>
+            </div>
+            <div className="flex justify-end gap-3">
+              <Button variant="outline" onClick={() => setOpenTrade(false)}>
+                Cancel
+              </Button>
+              <Button
+                onClick={handleExecuteTrade}
+                disabled={loading || tradingLoading}
+                className="bg-primary hover:bg-primary/90"
+              >
+                {(loading || tradingLoading) ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Zap className="h-4 w-4 mr-2" />}
+                Execute Trade
               </Button>
             </div>
           </DialogContent>

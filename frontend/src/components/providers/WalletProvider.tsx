@@ -3,28 +3,30 @@
 import { PropsWithChildren } from "react"
 import { AptosWalletAdapterProvider } from "@aptos-labs/wallet-adapter-react"
 import { PetraWallet } from "petra-plugin-wallet-adapter"
-import { MartianWallet } from "@martianwallet/aptos-wallet-adapter"
+import { Network } from "@aptos-labs/ts-sdk"
 
+// Wallets that support AIP-62 (like Martian, Nightly, etc.) will auto-detect
 const wallets = [
   new PetraWallet(),
-  new MartianWallet(),
 ]
 
 export function WalletProvider({ children }: PropsWithChildren) {
   return (
     <AptosWalletAdapterProvider
       plugins={wallets}
-      autoConnect={false}
+      autoConnect={true}
       dappConfig={{
-        network: "testnet" as any,
+        network: Network.TESTNET,
         aptosConnectDappId: "remora-defi",
-        aptosApiKey: undefined,
       }}
       onError={(error) => {
         console.error("Wallet error:", error)
         // Show user-friendly error message
         if (error.message?.includes("Network")) {
           console.log("Please make sure your wallet is connected to Aptos Testnet")
+        }
+        if (error.message?.includes("Martian")) {
+          console.log("Martian wallet connection failed. Please refresh and try again.")
         }
       }}
     >

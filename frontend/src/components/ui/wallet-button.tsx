@@ -86,7 +86,7 @@ export function WalletButton() {
             <Wallet className="h-4 w-4 mr-2" />
             <span className="hidden sm:inline">{balance} APT</span>
             <span className="sm:hidden">
-              {account.address.slice(0, 4)}...{account.address.slice(-4)}
+              {account.address.toString().slice(0, 4)}...{account.address.toString().slice(-4)}
             </span>
             <ChevronDown className="h-3 w-3 ml-2" />
           </Button>
@@ -95,7 +95,7 @@ export function WalletButton() {
           <div className="px-3 py-2">
             <p className="text-sm font-light">Connected</p>
             <p className="text-xs text-muted-foreground font-light truncate">
-              {account.address.slice(0, 6)}...{account.address.slice(-4)}
+              {account.address.toString().slice(0, 6)}...{account.address.toString().slice(-4)}
             </p>
           </div>
           <DropdownMenuSeparator />

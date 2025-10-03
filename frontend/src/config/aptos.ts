@@ -1,8 +1,11 @@
 import { Aptos, AptosConfig, Network } from "@aptos-labs/ts-sdk";
 
 // Contract addresses - Update these after deployment
-export const MODULE_ADDRESS = "0xe95e7998587e360db1185b3aa020dd07d77429ec340bbcd2bc8bc455e71d0e1a";
+export const MODULE_ADDRESS = "0xf8a774edce1e7d3bb1c9caf366d17e5bd7800f0def09c179f3d4e5cebfa6048a";
 export const MODULE_NAME = "remora";
+
+// VaultStore is located at the deployer's address (who called initialize)
+export const VAULT_STORE_ADDRESS = "0x614c86a7ecbce646aabd87644f8655342a797606bf26888b2fb06177d957322f";
 
 // Network configuration
 const getNetwork = (): Network => {

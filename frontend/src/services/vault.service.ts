@@ -1,7 +1,8 @@
 import { aptosClient } from "@/lib/aptos-client";
-import { 
-  CONTRACTS, 
+import {
+  CONTRACTS,
   MODULE_ADDRESS,
+  VAULT_STORE_ADDRESS,
   formatAptAmount,
   parseAptAmount,
   VAULT_STATUS
@@ -25,6 +26,7 @@ export interface Vault {
   minInvestment: number;
   maxInvestors: number;
   currentInvestors: number;
+  leadTrader: string; // Address to copy trades from
 }
 
 export interface CreateVaultParams {
@@ -35,6 +37,7 @@ export interface CreateVaultParams {
   managementFee: number; // in percentage (e.g., 2 for 2%)
   minInvestment: number; // in APT
   maxInvestors: number;
+  leadTrader: string; // Address to copy trades from
 }
 
 export interface ExecuteTradeParams {
@@ -48,7 +51,8 @@ export interface ExecuteTradeParams {
 }
 
 export class VaultService {
-  private moduleOwner: string = MODULE_ADDRESS;
+  // VaultStore is located at the address that called initialize(), not the module address
+  private moduleOwner: string = VAULT_STORE_ADDRESS;
 
   /**
    * Initialize the vault module (admin only)
@@ -74,6 +78,7 @@ export class VaultService {
         Math.floor(params.managementFee * 100).toString(), // Convert to basis points
         formatAptAmount(params.minInvestment).toString(),
         params.maxInvestors.toString(),
+        params.leadTrader, // Lead trader address
         this.moduleOwner,
       ],
     });
@@ -98,14 +103,12 @@ export class VaultService {
    */
   async withdrawFromVault(vaultId: number, sharesToRedeem: number): Promise<InputGenerateTransactionPayloadData> {
     // sharesToRedeem is already in decimal format (e.g., 0.5 for 0.5 shares)
-    // Convert to the smallest unit (8 decimals for APT)
-    const sharesInSmallestUnit = Math.floor(sharesToRedeem * 1e8);
-    
+    // Convert to the smallest unit (8 decimals) using the same helper as deposit
     return aptosClient.buildTransaction({
       function: `${CONTRACTS.VAULT.MODULE}::${CONTRACTS.VAULT.FUNCTIONS.WITHDRAW_FROM_VAULT}` as `${string}::${string}::${string}`,
       functionArguments: [
         vaultId.toString(),
-        sharesInSmallestUnit.toString(),
+        formatAptAmount(sharesToRedeem).toString(),
         this.moduleOwner,
       ],
     });
@@ -198,8 +201,15 @@ export class VaultService {
         minInvestment: parseAptAmount(result.min_investment),
         maxInvestors: Number(result.max_investors),
         currentInvestors: Number(result.current_investors),
+        leadTrader: result.lead_trader,
       };
-    } catch (error) {
+    } catch (error: any) {
+      // Silently ignore "vault not found" errors
+      if (error?.message?.includes('E_VAULT_NOT_FOUND') ||
+          error?.message?.includes('VAULT_NOT_FOUND')) {
+        return null;
+      }
+      // Only log unexpected errors
       console.error("Error fetching vault info:", error);
       return null;
     }
@@ -340,12 +350,50 @@ export class VaultService {
    */
   calculateAPY(vault: Vault, performance: { pnl: number; isPositive: boolean }): number {
     if (!performance.isPositive || vault.totalValue === 0) return 0;
-    
+
     const daysSinceCreation = (Date.now() / 1000 - vault.createdAt) / 86400;
     if (daysSinceCreation === 0) return 0;
-    
+
     const dailyReturn = performance.pnl / vault.totalValue / daysSinceCreation;
     return Math.pow(1 + dailyReturn, 365) - 1;
+  }
+
+  /**
+   * Get all vaults globally (for discovery)
+   * Uses sequential fetching with early termination to reduce network spam
+   */
+  async getAllVaults(maxVaultId: number = 100): Promise<Vault[]> {
+    try {
+      const allVaults: Vault[] = [];
+      let consecutiveNotFound = 0;
+      const MAX_CONSECUTIVE_NOT_FOUND = 5; // Stop after 5 consecutive not found
+
+      for (let vaultId = 1; vaultId <= maxVaultId; vaultId++) {
+        try {
+          const vault = await this.getVaultInfo(vaultId);
+          if (vault !== null) {
+            allVaults.push(vault);
+            consecutiveNotFound = 0; // Reset counter
+          } else {
+            consecutiveNotFound++;
+            // Stop if we've hit too many consecutive non-existent vaults
+            if (consecutiveNotFound >= MAX_CONSECUTIVE_NOT_FOUND) {
+              break;
+            }
+          }
+        } catch (error) {
+          consecutiveNotFound++;
+          if (consecutiveNotFound >= MAX_CONSECUTIVE_NOT_FOUND) {
+            break;
+          }
+        }
+      }
+
+      return allVaults;
+    } catch (error) {
+      console.error("Error fetching all vaults:", error);
+      return [];
+    }
   }
 }
 

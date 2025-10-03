@@ -5,13 +5,12 @@ authors = ["Remora Team"]
 license = "Apache-2.0"
 
 [addresses]
-remora = "0xe95e7998587e360db1185b3aa020dd07d77429ec340bbcd2bc8bc455e71d0e1a"
+remora = "0xf8a774edce1e7d3bb1c9caf366d17e5bd7800f0def09c179f3d4e5cebfa6048a"
 std = "0x1"
 aptos_std = "0x1"
 aptos_framework = "0x1"
 
 [dev-addresses]
-remora = "0xe95e7998587e360db1185b3aa020dd07d77429ec340bbcd2bc8bc455e71d0e1a"
 
 [dependencies.AptosFramework]
 git = "https://github.com/aptos-labs/aptos-core.git"
