@@ -11,12 +11,10 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
-import { Switch } from "@/components/ui/switch"
-import { 
+import {
   Plus, TrendingUp, Users, DollarSign, Shield,
   ArrowUpRight, ArrowDownRight, Loader2, PieChart,
-  BarChart3, Activity, Wallet, Trophy, UserPlus, Minus
+  BarChart3, Activity, Wallet, Trophy, UserPlus
 } from "lucide-react"
 import { useWallet } from "@aptos-labs/wallet-adapter-react"
 import { useVault } from "@/hooks/useVault"
@@ -53,9 +51,7 @@ export default function Vault() {
     managementFee: "2",
     performanceFee: "20",
     minDeposit: "100",
-    isMultiSig: false,
-    signers: [""],
-    threshold: "1"
+    leadTrader: ""
   })
 
   const [depositAmount, setDepositAmount] = useState("100")
@@ -94,7 +90,8 @@ export default function Vault() {
         managementFee: parseFloat(vaultForm.managementFee) / 100,
         performanceFee: parseFloat(vaultForm.performanceFee) / 100,
         minInvestment: parseFloat(vaultForm.minDeposit),
-        maxInvestors: 100
+        maxInvestors: 100,
+        leadTrader: vaultForm.leadTrader
       })
 
       setOpenCreate(false)
@@ -104,9 +101,7 @@ export default function Vault() {
         managementFee: "2",
         performanceFee: "20",
         minDeposit: "100",
-        isMultiSig: false,
-        signers: [""],
-        threshold: "1"
+        leadTrader: ""
       })
       
       toast.success("Vault created successfully!")
@@ -243,12 +238,24 @@ export default function Vault() {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="description">Description</Label>
-                  <Textarea 
-                    id="description" 
-                    placeholder="Describe your investment strategy..." 
+                  <Textarea
+                    id="description"
+                    placeholder="Describe your investment strategy..."
                     value={vaultForm.description}
                     onChange={(e) => setVaultForm({...vaultForm, description: e.target.value})}
                   />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="leadTrader">Lead Trader Address (Copy-Trading)</Label>
+                  <Input
+                    id="leadTrader"
+                    placeholder="0x... (leave empty for manual trading)"
+                    value={vaultForm.leadTrader}
+                    onChange={(e) => setVaultForm({...vaultForm, leadTrader: e.target.value})}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Enter the wallet address to automatically copy trades from. Leave empty for manual vault management.
+                  </p>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
@@ -282,81 +289,6 @@ export default function Vault() {
                     onChange={(e) => setVaultForm({...vaultForm, minDeposit: e.target.value})}
                   />
                 </div>
-                
-                <Collapsible>
-                  <CollapsibleTrigger className="flex items-center gap-2 text-sm hover:text-primary transition-colors">
-                    <Shield className="h-4 w-4" />
-                    Advanced Security Options
-                  </CollapsibleTrigger>
-                  <CollapsibleContent className="space-y-4 pt-4">
-                    <div className="flex items-center justify-between">
-                      <Label htmlFor="multisig" className="text-sm">Enable Multi-Signature</Label>
-                      <Switch
-                        id="multisig"
-                        checked={vaultForm.isMultiSig}
-                        onCheckedChange={(checked) => setVaultForm({...vaultForm, isMultiSig: checked})}
-                      />
-                    </div>
-                    
-                    {vaultForm.isMultiSig && (
-                      <>
-                        <div className="space-y-2">
-                          <Label className="text-sm">Signers (Wallet Addresses)</Label>
-                          {vaultForm.signers.map((signer, index) => (
-                            <div key={index} className="flex gap-2">
-                              <Input
-                                value={signer}
-                                onChange={(e) => {
-                                  const newSigners = [...vaultForm.signers]
-                                  newSigners[index] = e.target.value
-                                  setVaultForm({...vaultForm, signers: newSigners})
-                                }}
-                                placeholder="0x..."
-                              />
-                              {index === vaultForm.signers.length - 1 ? (
-                                <Button
-                                  type="button"
-                                  variant="outline"
-                                  size="icon"
-                                  onClick={() => setVaultForm({...vaultForm, signers: [...vaultForm.signers, ""]})}
-                                >
-                                  <Plus className="h-4 w-4" />
-                                </Button>
-                              ) : (
-                                <Button
-                                  type="button"
-                                  variant="outline"
-                                  size="icon"
-                                  onClick={() => {
-                                    const newSigners = vaultForm.signers.filter((_, i) => i !== index)
-                                    setVaultForm({...vaultForm, signers: newSigners})
-                                  }}
-                                >
-                                  <Minus className="h-4 w-4" />
-                                </Button>
-                              )}
-                            </div>
-                          ))}
-                        </div>
-                        
-                        <div className="space-y-2">
-                          <Label htmlFor="threshold" className="text-sm">Required Signatures</Label>
-                          <Input
-                            id="threshold"
-                            type="number"
-                            min="1"
-                            max={vaultForm.signers.length}
-                            value={vaultForm.threshold}
-                            onChange={(e) => setVaultForm({...vaultForm, threshold: e.target.value})}
-                          />
-                          <p className="text-xs text-muted-foreground">
-                            {vaultForm.threshold} out of {vaultForm.signers.filter(s => s).length} signatures required
-                          </p>
-                        </div>
-                      </>
-                    )}
-                  </CollapsibleContent>
-                </Collapsible>
               </div>
               <div className="flex justify-end gap-3">
                 <Button variant="outline" onClick={() => setOpenCreate(false)}>
@@ -466,6 +398,13 @@ export default function Vault() {
                           <CardDescription className="text-xs">
                             Manager: {vault.manager.slice(0, 8)}...{vault.manager.slice(-6)}
                           </CardDescription>
+                          {vault.leadTrader && vault.leadTrader !== "0x0" && (
+                            <div className="mt-1 flex items-center gap-1">
+                              <Badge variant="secondary" className="text-xs">
+                                Copy-Trading: {vault.leadTrader.slice(0, 6)}...{vault.leadTrader.slice(-4)}
+                              </Badge>
+                            </div>
+                          )}
                         </div>
                         <div className="flex items-center gap-2">
                           {getStatusBadge(vault.status)}
@@ -561,6 +500,13 @@ export default function Vault() {
                           <CardDescription className="text-xs">
                             Manager: {vault.manager.slice(0, 8)}...{vault.manager.slice(-6)}
                           </CardDescription>
+                          {vault.leadTrader && vault.leadTrader !== "0x0" && (
+                            <div className="mt-1 flex items-center gap-1">
+                              <Badge variant="secondary" className="text-xs">
+                                Copy-Trading: {vault.leadTrader.slice(0, 6)}...{vault.leadTrader.slice(-4)}
+                              </Badge>
+                            </div>
+                          )}
                         </div>
                         <div className="flex items-center gap-2">
                           {getStatusBadge(vault.status)}
@@ -658,6 +604,13 @@ export default function Vault() {
                           <CardDescription className="text-xs">
                             Manager: {vault.manager.slice(0, 8)}...{vault.manager.slice(-6)}
                           </CardDescription>
+                          {vault.leadTrader && vault.leadTrader !== "0x0" && (
+                            <div className="mt-1 flex items-center gap-1">
+                              <Badge variant="secondary" className="text-xs">
+                                Copy-Trading: {vault.leadTrader.slice(0, 6)}...{vault.leadTrader.slice(-4)}
+                              </Badge>
+                            </div>
+                          )}
                         </div>
                         <div className="flex items-center gap-2">
                           {getStatusBadge(vault.status)}
