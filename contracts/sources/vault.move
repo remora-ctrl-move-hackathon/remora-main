@@ -75,6 +75,7 @@ module remora::vault {
         min_investment: u64,
         max_investors: u64,
         current_investors: u64,
+        lead_trader: address,  // Address to copy trades from (for copy-trading vaults)
     }
 
     /// VaultStore - stores all vaults
@@ -170,6 +171,7 @@ module remora::vault {
         management_fee: u64,
         min_investment: u64,
         max_investors: u64,
+        lead_trader: address,
         module_owner: address,
     ) acquires VaultStore {
         let manager_addr = signer::address_of(manager);
@@ -199,6 +201,7 @@ module remora::vault {
             min_investment,
             max_investors,
             current_investors: 0,
+            lead_trader,
         };
 
         // Store vault
@@ -572,6 +575,16 @@ module remora::vault {
         assert!(table::contains(&vault_store.vaults, vault_id), E_VAULT_NOT_FOUND);
         let vault = table::borrow(&vault_store.vaults, vault_id);
         vault.total_value
+    }
+
+    #[view]
+    /// Get the lead trader address for a copy-trading vault
+    public fun get_lead_trader(vault_id: u64, module_owner: address): address acquires VaultStore {
+        assert!(exists<VaultStore>(module_owner), E_NOT_INITIALIZED);
+        let vault_store = borrow_global<VaultStore>(module_owner);
+        assert!(table::contains(&vault_store.vaults, vault_id), E_VAULT_NOT_FOUND);
+        let vault = table::borrow(&vault_store.vaults, vault_id);
+        vault.lead_trader
     }
 
     #[view]
