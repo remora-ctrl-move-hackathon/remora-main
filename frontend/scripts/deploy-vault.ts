@@ -1,8 +1,8 @@
-import { Aptos, AptosConfig, Network, Account } from "@aptos-labs/ts-sdk";
+import { Aptos, AptosConfig, Network, Account, Ed25519PrivateKey } from "@aptos-labs/ts-sdk";
 import * as fs from "fs";
 import * as path from "path";
 
-const CONFIG_PATH = path.join(process.env.HOME!, ".aptos", "config.yaml");
+const CONFIG_PATH = path.join(__dirname, "../../contracts/.aptos/config.yaml");
 
 async function deployVault() {
   const config = new AptosConfig({ network: Network.TESTNET });
@@ -10,7 +10,7 @@ async function deployVault() {
 
   // Read the private key from .aptos/config.yaml
   const configContent = fs.readFileSync(CONFIG_PATH, "utf8");
-  const privateKeyMatch = configContent.match(/private_key:\s*"(0x[a-f0-9]+)"/);
+  const privateKeyMatch = configContent.match(/private_key:\s*(?:ed25519-priv-)?(0x[a-f0-9]+)/);
 
   if (!privateKeyMatch) {
     console.error("❌ Could not find private key in", CONFIG_PATH);
@@ -18,9 +18,8 @@ async function deployVault() {
   }
 
   const privateKeyHex = privateKeyMatch[1];
-  const account = Account.fromPrivateKey({
-    privateKey: { hexString: privateKeyHex },
-  });
+  const privateKey = new Ed25519PrivateKey(privateKeyHex);
+  const account = Account.fromPrivateKey({ privateKey });
 
   console.log("📍 Deployer Account:", account.accountAddress.toString());
 

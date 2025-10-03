@@ -29,13 +29,19 @@ export function Header() {
               >
                 Streams
               </Link>
-              <Link 
+              <Link
                 href="/vault"
                 className={`text-sm font-light ${isActive("/vault") ? "text-primary font-normal" : "text-muted-foreground hover:text-foreground"} transition-all duration-200`}
               >
                 Vaults
               </Link>
-              <Link 
+              <Link
+                href="/coaches"
+                className={`text-sm font-light ${isActive("/coaches") ? "text-primary font-normal" : "text-muted-foreground hover:text-foreground"} transition-all duration-200`}
+              >
+                AI Coaches
+              </Link>
+              <Link
                 href="/remit"
                 className={`text-sm font-light ${isActive("/remit") ? "text-primary font-normal" : "text-muted-foreground hover:text-foreground"} transition-all duration-200`}
               >
